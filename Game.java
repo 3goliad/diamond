@@ -36,15 +36,17 @@ import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.util.Duration;
+import javafx.scene.input.KeyCode;
 
 public class Game{
 
 	private BorderPane _game;
 	private Camera _camera;
 	private Group _root3d;
-	private int _size;
+	private int _size,  _detail;
 	private ImageView _cloudsView;
 	private ImageView _cloudsView2;
+	private float _scale, _smooth;
 
 	public Game(){
       /* code handling the two cloudsView is scattered across the file, create a class? */
@@ -52,6 +54,9 @@ public class Game{
 		_cloudsView2 = new ImageView();
 		//controls the terrain dimensions
 		_size = 250;
+		_detail = 6;
+		_scale = 25;
+		_smooth = 2;
 		//Pane and Scene graph, 3d Group
 		_camera = new PerspectiveCamera(true);
 		_game = new BorderPane();
@@ -83,18 +88,18 @@ public class Game{
 		_camera.setTranslateZ(0);
 		//Key/Mouse Input
     _game.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent e) -> {
-            int code = e.getCode();
-            if(e == UP || e == DOWN) {
-                _camera.setTranslateZ(_camera.getTranslateZ() + (code == UP ? 10 : -10));
+    	KeyCode code = e.getCode();
+            if(code == KeyCode.UP || code == KeyCode.DOWN) {
+                _camera.setTranslateZ(_camera.getTranslateZ() + (code == KeyCode.UP ? 10 : -10));
                 System.out.println(_camera.getTranslateZ());
-            } else if(code == LEFT || code == RIGHT) {
-                _camera.setTranslateX(_camera.getTranslateX() + (code == RIGHT ? 5 : -5));
+            } else if(code == KeyCode.LEFT || code == KeyCode.RIGHT) {
+                _camera.setTranslateX(_camera.getTranslateX() + (code == KeyCode.RIGHT ? 5 : -5));
                 System.out.println(_camera.getTranslateX());
-            } else if(code == Q || code == A) {
-                _camera.setTranslateY(_camera.getTranslateY() + (code == Q ? 5 : -10));
+            } else if(code == KeyCode.Q || code == KeyCode.A) {
+                _camera.setTranslateY(_camera.getTranslateY() + (code == KeyCode.Q ? 5 : -10));
                 System.out.println(_camera.getTranslateY());
             }
-            keyEvent.consume();
+            e.consume();
         });
 	    //_game.addEventHandler(MouseEvent.MOUSE_MOVED, new MouseHandler());
 	    _game.requestFocus();
@@ -153,19 +158,20 @@ public class Game{
     }
 
     private void terrainSetUp(){
-        // dedicated Terrain class can manage individual Vertex objects with heightmap data
-    	float[][] heightmap = generateHeightMap();
-      // Terrain has set of objects implementing Structure that contain the ways that they change the base terrain
-    	Buildings buildings = new Buildings(heightmap, _size);
-      // possible to change mesh coords with low overhead?
-      // possible to place structures as independent meshes?
-    	Group towns = buildings.spawnBuildings();
-    	TriangleMesh mesh = createMesh(_size, heightmap);
-    	MeshView pyramid = new MeshView(mesh);
+
+  
+    	//Terrain
+    	Terrain terrain = new Terrain(_size, _detail, _scale, _smooth);
+    	MeshView pyramid = terrain.getView();
 		pyramid.setDrawMode(DrawMode.FILL);
 		pyramid.setCullFace(CullFace.FRONT);
 		PhongMaterial bluestuff = new PhongMaterial(Color.BURLYWOOD);
 		pyramid.setMaterial(bluestuff);
+	    // Terrain has set of objects implementing Structure that contain the ways that they change the base terrain
+    	Buildings buildings = new Buildings(terrain.getMap(), _size);
+      // possible to change mesh coords with low overhead?
+      // possible to place structures as independent meshes?
+    	Group towns = buildings.spawnBuildings();
 //		Box buildingtest = new Box(2,2,2);
 //		buildingtest.setTranslateX(20);
 //		PhongMaterial redstuff = new PhongMaterial(Color.RED);
@@ -177,82 +183,6 @@ public class Game{
     	DiamondSquare diamond = new DiamondSquare(_size, 6, 10, 2);
     	return diamond.generate();
     }
-    //This is for creating a Triangle Mesh from the heightmap
-    private TriangleMesh createMesh(int size, float[][] heightmap){
-    	//Observable arrays allow us to be flexible with the number
-    	//of points and vertexes.
-    	//collection of points
-    	ObservableFloatArray p = FXCollections.observableFloatArray();
-    	//collection of faces
-    	ObservableIntegerArray f = FXCollections.observableIntegerArray();
-    	//vMark keeps track of which vertex we're working on
-    	Integer[][] vMark = new Integer[size][size];
-    	int vertexCounter = 0;
-    	for (int x = 0; x < size; x++){
-    		for (int z = 0; z < size; z++){
-    			float tempX = x;
-    			float tempY = heightmap[x][z];
-    			float tempZ = z;
-    			if (z + 1 < size && x + 1 < size){
-    				Integer vCurrent = vMark[x][z];
-    				Integer vDown = vMark[x][z + 1];
-    				Integer vRight = vMark[x+1][z];
-    				//When it reaches a new vertex point, add the temp values
-    				if (vCurrent == null){
-    					p.addAll(tempX, tempY, tempZ);
-    					vMark[x][z] = vertexCounter++;
-    					vCurrent = vMark[x][z];
-    				}
-    				if (vDown == null){
-    					//The point above
-    					p.addAll(tempX);
-    					p.addAll(heightmap[x][z + 1]);
-    					p.addAll(tempZ);
-    					vMark[x][z+1] = vertexCounter ++;
-    					vDown = vMark[x][z + 1];
-    				}
-    				if (vRight == null){
-    					//The point to the right
-    					p.addAll(tempX);
-    					p.addAll(heightmap[x+1][z]);
-    					p.addAll(tempZ);
-    					vMark[x+1][z] = vertexCounter ++;
-    					vRight = vMark[x+1][z];
-    				}
-    				f.addAll(vCurrent, 0, vDown, 0, vRight, 0);
-    			}
-    			if (z - 1 >= 0 && x - 1 >= 0){
-    				Integer vCurrent = vMark[x][z];
-    				Integer vUp = vMark[x][z - 1];
-    				Integer vLeft = vMark[x-1][z];
-    				if (vCurrent == null){
-    					p.addAll(tempX, tempY, tempZ);
-    					vMark[x][z] = vertexCounter++;
-    					vCurrent = vMark[x][z];
-    				}
-    				if (vUp == null) {
-    					p.addAll(tempX);
-    					p.addAll(heightmap[x-1][z]);
-    					p.addAll(tempZ);
-    					vMark[x][z-1] = vertexCounter++;
-    					vUp = vMark[x][z-1];
-    				}
-    				if (vLeft == null) {
-    					p.addAll(tempX);
-    					p.addAll(heightmap[x][z-1]);
-    					p.addAll(tempZ);
-    					vMark[x-1][z] = vertexCounter++;
-    				}
-    				f.addAll(vCurrent, 0, vUp, 0, vLeft, 0);
-    			}
-    		}
-    	}
-    	TriangleMesh mesh = new TriangleMesh();
-    	//Maybe change this in the future to add texture
-    	mesh.getTexCoords().addAll(0,0);
-    	mesh.getPoints().addAll(p);
-    	mesh.getFaces().addAll(f);
-    	return mesh;
-    }
+
 
 }

@@ -10,13 +10,15 @@ import javafx.scene.shape.TriangleMesh;
 public class Terrain {
 
 		private Mesh _terrainMesh;
+		private MeshView _terrainView;
 		private float[][] _heightmap;
 	
-		
-	public MeshView Terrain(int size){
+	public Terrain(int size, int detail, float scale, float smooth){
+		DiamondSquare diamond = new DiamondSquare(size, detail, scale, smooth);
+		_heightmap = diamond.generate();
 		_terrainMesh = this.createMesh(size, _heightmap);
-		MeshView terrainView = new MeshView(_terrainMesh);
-		return terrainView;
+		_terrainView = new MeshView(_terrainMesh);
+		
 	}
 	
     //This is for creating a Triangle Mesh from the heightmap
@@ -96,4 +98,13 @@ public class Terrain {
     	mesh.getFaces().addAll(f);
     	return mesh;
     }
+    
+    public MeshView getView(){
+    	return _terrainView;
+    }
+    
+    public float[][] getMap(){
+    	return _heightmap;
+    }
+    
 }
