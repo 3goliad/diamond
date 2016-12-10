@@ -10,7 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point3D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Ambient Light;
+import javafx.scene.AmbientLight;
 import javafx.scene.Camera;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
@@ -93,7 +93,7 @@ public class Game{
 	public Pane getRoot() {
 	        return _game;
 	    }
-	
+
 	/*Timeline*/
 	public void setupTimeline(){
       /* Framerate shouldn't update faster than the screen refresh rate, wastes resources. Set to 60Hz? */
@@ -122,13 +122,13 @@ public class Game{
 		 _cloudsView.setX(_cloudsView.getX()+.001);
 		 _cloudsView2.setX(_cloudsView2.getX()-.001);
 		 if (_cloudsView.getX()>=_size){
-		_cloudsView.setX(-_size);	 
+		_cloudsView.setX(-_size);
 		 }
 		 if (_cloudsView2.getX()<=-_size*2){
 		_cloudsView2.setX(0);
 		 }
 	 }
-	
+
 	 /*Controls*/
     /* this class name is a paraphrase of the interface, consider using a name that describes its function (CameraPanner?) */
     private class KeyHandler implements EventHandler<KeyEvent>{
@@ -157,27 +157,27 @@ public class Game{
             _camera.setTranslateZ(_camera.getTranslateZ()+10);
             System.out.println(_camera.getTranslateZ());
             break;
-            
+
             case DOWN:
             _camera.setTranslateZ(_camera.getTranslateZ()-10);
             System.out.println(_camera.getTranslateZ());
             break;
-            
+
             case LEFT:
             _camera.setTranslateX(_camera.getTranslateX()-5);
             System.out.println(_camera.getTranslateX());
             break;
-            
+
             case RIGHT:
             _camera.setTranslateX(_camera.getTranslateX()+5);
             System.out.println(_camera.getTranslateX());
             break;
-            
+
             case Q:
             _camera.setTranslateY(_camera.getTranslateY()+5);
             System.out.println(_camera.getTranslateY());
              break;
-             
+
             case A:
                 _camera.setTranslateY(_camera.getTranslateY()-10);
                 System.out.println(_camera.getTranslateY());
@@ -189,7 +189,7 @@ public class Game{
         keyEvent.consume();
     }
     }
-    
+
     private void cloudSetUp(){
     	Clouds clouds = new Clouds(_size);
     	Image cloudsImage = clouds.generate();
@@ -212,7 +212,7 @@ public class Game{
     	_cloudsView2.getTransforms().add(new Scale(1, 1.3));
     	_root3d.getChildren().addAll(_cloudsView, _cloudsView2);
     }
-    
+
     private void terrainSetUp(){
         // dedicated Terrain class can manage individual Vertex objects with heightmap data
     	float[][] heightmap = generateHeightMap();
