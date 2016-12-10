@@ -82,8 +82,20 @@ public class Game{
 		_camera.setTranslateX(50);
 		_camera.setTranslateZ(0);
 		//Key/Mouse Input
-	    _game.addEventHandler(KeyEvent.KEY_PRESSED, new KeyHandler());
-      /* KeyHandler could be replaced with a lambda, but it's up to you if you want the key logic here */
+    _game.addEventHandler(KeyEvent.KEY_PRESSED, (ActionEvent e) -> {
+            int code = keyEvent.getCode();
+            if(code == UP || code == DOWN) {
+                _camera.setTranslateZ(_camera.getTranslateZ() + (code == UP ? 10 : -10));
+                System.out.println(_camera.getTranslateZ());
+            } else if(code == LEFT || code == RIGHT) {
+                _camera.setTranslateX(_camera.getTranslateX() + (code == RIGHT ? 5 : -5));
+                System.out.println(_camera.getTranslateX());
+            } else if(code == Q || code == A) {
+                _camera.setTranslateY(_camera.getTranslateY() + (code == Q ? 5 : -10));
+                System.out.println(_camera.getTranslateY());
+            }
+            keyEvent.consume();
+        });
 	    //_game.addEventHandler(MouseEvent.MOUSE_MOVED, new MouseHandler());
 	    _game.requestFocus();
 	    _game.setFocusTraversable(true);
@@ -96,26 +108,14 @@ public class Game{
 
 	/*Timeline*/
 	public void setupTimeline(){
-      /* Framerate shouldn't update faster than the screen refresh rate, wastes resources. Set to 60Hz? */
         KeyFrame kf = new KeyFrame(Duration.millis(1),
-                                   /* (ActionEvent e) -> {
-                                      scrollClouds();
-                                      });
-                                      This lambda function can take the place of the TimeHandler class
-                                   */
-        new TimeHandler());
+                 (ActionEvent e) -> {
+                    scrollClouds();
+                 });
         Timeline timeline = new Timeline(kf);
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }
-
-    /* this class name says more about the interface the class implements than the function of the class, change? */
-	 private class TimeHandler implements EventHandler<ActionEvent>{
-	        public void handle(ActionEvent event){
-	        	scrollClouds();
-	        	//System.out.println(_cloudsView.getTranslateZ());
-	        }
-	 }
 
     /* could be a scroll method on a cloud holding class */
 	 private void scrollClouds(){
@@ -128,67 +128,6 @@ public class Game{
 		_cloudsView2.setX(0);
 		 }
 	 }
-
-	 /*Controls*/
-    /* this class name is a paraphrase of the interface, consider using a name that describes its function (CameraPanner?) */
-    private class KeyHandler implements EventHandler<KeyEvent>{
-        @Override
-        public void handle(KeyEvent keyEvent){
-            /*
-              int code = keyEvent.getCode();
-              if(code == UP || code == DOWN) {
-              _camera.setTranslateZ(_camera.getTranslateZ() + (code == UP ? 10 : -10));
-              System.out.println(_camera.getTranslateZ());
-              } else if(code == LEFT || code == RIGHT) {
-              _camera.setTranslateX(_camera.getTranslateX() + (code == RIGHT ? 5 : -5));
-              System.out.println(_camera.getTranslateX());
-              } else if(code == Q || code == A) {
-              _camera.setTranslateY(_camera.getTranslateY() + (code == Q ? 5 : -10));
-              System.out.println(_camera.getTranslateY());
-              }
-              keyEvent.consume();
-
-              By abusing the ternary operator, this logic can be cut from 36 to 12 lines
-              In addition, this uses fewer compares, though I suspect the performance bottleneck is not in the key handling code
-            */
-            switch (keyEvent.getCode()){
-
-            case UP:
-            _camera.setTranslateZ(_camera.getTranslateZ()+10);
-            System.out.println(_camera.getTranslateZ());
-            break;
-
-            case DOWN:
-            _camera.setTranslateZ(_camera.getTranslateZ()-10);
-            System.out.println(_camera.getTranslateZ());
-            break;
-
-            case LEFT:
-            _camera.setTranslateX(_camera.getTranslateX()-5);
-            System.out.println(_camera.getTranslateX());
-            break;
-
-            case RIGHT:
-            _camera.setTranslateX(_camera.getTranslateX()+5);
-            System.out.println(_camera.getTranslateX());
-            break;
-
-            case Q:
-            _camera.setTranslateY(_camera.getTranslateY()+5);
-            System.out.println(_camera.getTranslateY());
-             break;
-
-            case A:
-                _camera.setTranslateY(_camera.getTranslateY()-10);
-                System.out.println(_camera.getTranslateY());
-                 break;
-
-            default:
-                break;
-        }
-        keyEvent.consume();
-    }
-    }
 
     private void cloudSetUp(){
     	Clouds clouds = new Clouds(_size);

@@ -18,7 +18,7 @@ import javafx.collections.ObservableList;
 public class PaneOrganizer {
     private BorderPane _pane;
     private HBox _bottomPane;
-    
+
     public PaneOrganizer(){
         _pane = new BorderPane();
        // _pane.setStyle("-fx-background-color: #000;");
@@ -41,7 +41,7 @@ public class PaneOrganizer {
         exitBtn.setOnAction(new ExitHandler());
         _pane.setBottom(_bottomPane);
     }
-    
+
     private void createMainMenu(){
     	VBox mainMenu = new VBox(150);
     	mainMenu.setMaxWidth(100);
@@ -50,14 +50,14 @@ public class PaneOrganizer {
     	//Label
     	Label terrain = new Label("Terrain Type:");
     	//Choice Box
-    	ChoiceBox terrainList = new ChoiceBox(FXCollections.observableArrayList(
+    	ChoiceBox terrainList = new ChoiceBox<String>(FXCollections.observableArrayList(
     			"Alpine", "Desert", "Plains"));
     	terrainList.setPrefWidth(100);
     	terrainList.setPrefHeight(20);
     	terrainList.getSelectionModel().selectFirst();
 //    	  terrainList.getSelectionModel().selectedIndexProperty().addListener(new
 //    	    		ChangeListener<Number>(){
-//    		  
+//
 //    	  }
     	//Start Button
     	Button startBtn = new Button("Start");
@@ -65,8 +65,8 @@ public class PaneOrganizer {
     	mainMenu.getChildren().addAll(terrain, terrainList, startBtn);
     	_pane.setCenter(mainMenu);
     }
-    
-  
+
+
     /*Adding click functionality to the button*/
     private class ExitHandler implements EventHandler<ActionEvent> {
         @Override
@@ -75,7 +75,7 @@ public class PaneOrganizer {
             e.consume();
         }
     }
-    
+
     /*Start button should begin the game*/
     private class StartHandler implements EventHandler<ActionEvent> {
         @Override
@@ -84,7 +84,7 @@ public class PaneOrganizer {
         	  _pane.getChildren().add(game.getRoot());
         }
     }
-    
-    
+
+
 
 }
