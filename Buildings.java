@@ -23,22 +23,22 @@ public class Buildings{
 	 * Generate a random number of rectangles in a  grid pattern
 	 * set their -y to the float value (might have to tweak this)
 	 */
-	private float[][] _heightmap;
+	private float[][] _heightmap;	
 	private int _size;
 	private int _s;
 	private PriorityQueue<Point3D> _sortedCorners;
-
+	
 	public Buildings(float[][] heightmap, int size){
 		_heightmap = heightmap;
 		_size = size;
 		_s = 0;
 		this.createRegions();
 	}
-
+	
 	public void createRegions(){
 		//_size values should end in 0 or 5 to avoid problems with this
 		int _s = _size / Constants.GRID_SQUARES;
-
+		
 		//Using arraylist to keep track of each square. 
 		//Point3D in order to store the deviation of the region in the Z value
 		ArrayList<Point3D> corners = new ArrayList<Point3D>();
@@ -58,7 +58,7 @@ public class Buildings{
 			float low = _heightmap[(int)point.getX()][(int)point.getY()];
 			for (int x = ((int)point.getX()) - _s; x<point.getX(); x++){
 				for (int y = ((int)point.getY()) - _s; y<point.getY(); y++){
-					//find the highest and lowest values
+					//find the highest and lowest values 
 					float height = _heightmap[x][y];
 					if (height>high){
 						high = height;
@@ -73,11 +73,11 @@ public class Buildings{
 			}
 			//weigh according to mean
 			double difference = (high - low)+avg*2;
-
+			
 			//remove and reinsert
 			Point3D newpoint = new Point3D(point.getX(), point.getY(), difference);
 			corners.set(i, newpoint);
-
+			
 		}
 		//Now we transfer the arraylist to a  priority queue 
 		Comparator<Point3D> comparator = new Point3DComparator();
@@ -92,7 +92,7 @@ public class Buildings{
 		//
 		_sortedCorners = sortedCorners;
 		}
-
+	
 	public Group spawnBuildings(){
 		PhongMaterial buildingColor = new PhongMaterial(Color.RED);
 		Group towns = new Group();
@@ -108,7 +108,13 @@ public class Buildings{
 			towns.getChildren().add(building);
 		}
 		return towns;
-
+		
 	}
-
+	
 }
+	
+							
+		
+		
+	
+	
