@@ -24,6 +24,8 @@ public class PaneOrganizer {
        // _pane.setStyle("-fx-background-color: #000;");
         this.createMainMenu();
         this.createbottomPane();
+        Game game = new Game();
+  	  _pane.getChildren().add(game.getRoot());
     }
 
     public Pane getRoot() {
@@ -80,8 +82,8 @@ public class PaneOrganizer {
     private class StartHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent e){
-        	 Game game = new Game();
-        	  _pane.getChildren().add(game.getRoot());
+        	 //Game game = new Game();
+        	  //_pane.getChildren().add(game.getRoot());
         }
     }
 

@@ -46,7 +46,7 @@ public class Game{
 	private int _size,  _detail;
 	private ImageView _cloudsView;
 	private ImageView _cloudsView2;
-	private float _scale, _smooth;
+	private float _scale, _smooth, _waterline;
 
 	public Game(){
       /* code handling the two cloudsView is scattered across the file, create a class? */
@@ -55,22 +55,22 @@ public class Game{
 		//controls the terrain dimensions
 		_size = 250;
 		_detail = 6;
-		_scale = 25;
+		_scale = 40;
 		_smooth = 2;
+		_waterline = _scale;
+		
 		//Pane and Scene graph, 3d Group
 		_camera = new PerspectiveCamera(true);
 		_game = new BorderPane();
 		_root3d = new Group(_camera);
 		//Lighting set up
-				PointLight light = new PointLight();
-				light.setTranslateY(100);
-				light.setColor(Color.ALICEBLUE);
+				AmbientLight light = new AmbientLight();
+				light.setColor(Color.rgb(80, 80, 100, .1));
 				PointLight light2 = new PointLight();
-				light2.setTranslateY(100);
 				light2.setColor(Color.BEIGE);
-				light2.setTranslateY(100);
-				light2.setTranslateX(_size);
-				light2.setTranslateZ(_size);
+				light2.setTranslateY(200);
+				light2.setTranslateX(_size/2);
+				light2.setTranslateZ(_size/2);
 				_root3d.getChildren().addAll(light, light2);
 		this.terrainSetUp();
 		this.cloudSetUp();
@@ -158,17 +158,15 @@ public class Game{
     }
 
     private void terrainSetUp(){
-
-  
     	//Terrain
     	Terrain terrain = new Terrain(_size, _detail, _scale, _smooth);
     	MeshView pyramid = terrain.getView();
 		pyramid.setDrawMode(DrawMode.FILL);
 		pyramid.setCullFace(CullFace.FRONT);
-		PhongMaterial bluestuff = new PhongMaterial(Color.BURLYWOOD);
+		PhongMaterial bluestuff = new PhongMaterial(Color.FORESTGREEN);
 		pyramid.setMaterial(bluestuff);
 	    // Terrain has set of objects implementing Structure that contain the ways that they change the base terrain
-    	Buildings buildings = new Buildings(terrain.getMap(), _size);
+    	Buildings buildings = new Buildings(terrain.getMap(), _size, _waterline);
       // possible to change mesh coords with low overhead?
       // possible to place structures as independent meshes?
     	Group towns = buildings.spawnBuildings();
@@ -176,13 +174,11 @@ public class Game{
 //		buildingtest.setTranslateX(20);
 //		PhongMaterial redstuff = new PhongMaterial(Color.RED);
 //		buildingtest.setMaterial(redstuff);
-		_root3d.getChildren().addAll(pyramid, towns);
+    	//water
+    	Water water = new Water(_size, _waterline);
+		_root3d.getChildren().addAll(pyramid, towns, water.getWater());
     }
 
-    private float[][] generateHeightMap(){
-    	DiamondSquare diamond = new DiamondSquare(_size, 6, 10, 2);
-    	return diamond.generate();
-    }
 
 
 }
