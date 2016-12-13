@@ -49,17 +49,32 @@ public class Game{
 	private float _scale, _smooth, _waterline;
 	private double _cameraXVelocity, _cameraYVelocity, _cameraZVelocity;
 
-	public Game(){
-	
-      /* code handling the two cloudsView is scattered across the file, create a class? */
+	public Game(int terrainValue, double size){
+		_size = (int) size;
+		//controls the terrain dimensions
+		if (terrainValue == 0){
+			//Alpine
+			_detail = 6;
+			_scale = 30;
+			_smooth = 2;
+			_waterline = _scale;
+		} else if (terrainValue == 1){
+			//Desert
+			_detail = 6;
+			_scale = 15;
+			_smooth = 3;
+			_waterline = _scale+10;
+		} else if (terrainValue == 2){
+			//Plains
+			_detail = 6;
+			_scale = 5;
+			_smooth = 3;
+			_waterline = _scale;
+		}
+		
+		 /* code handling the two cloudsView is scattered across the file, create a class? */
 		_cloudsView = new ImageView();
 		_cloudsView2 = new ImageView();
-		//controls the terrain dimensions
-		_size = 200;
-		_detail = 6;
-		_scale = 20;
-		_smooth = 2;
-		_waterline = _scale;
 		
 		//Pane and Scene graph, 3d Group
 		_cameraXVelocity = 0;

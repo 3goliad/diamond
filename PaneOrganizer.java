@@ -18,14 +18,17 @@ import javafx.collections.ObservableList;
 public class PaneOrganizer {
     private BorderPane _pane;
     private HBox _bottomPane;
+    private ChoiceBox _terrainList;
+    private Slider _slider;
 
     public PaneOrganizer(){
+    	_terrainList = new ChoiceBox();
+    	_slider = new Slider();
         _pane = new BorderPane();
-       // _pane.setStyle("-fx-background-color: #000;");
         this.createMainMenu();
         this.createbottomPane();
-        Game game = new Game();
-  	  _pane.getChildren().add(game.getRoot());
+      //  Game game = new Game();
+  	//  _pane.getChildren().add(game.getRoot());
     }
 
     public Pane getRoot() {
@@ -46,25 +49,29 @@ public class PaneOrganizer {
 
     private void createMainMenu(){
     	VBox mainMenu = new VBox(150);
-    	mainMenu.setMaxWidth(100);
+    	mainMenu.setMaxWidth(300);
     	mainMenu.setSpacing(10);
     	mainMenu.setAlignment(Pos.CENTER);
     	//Label
     	Label terrain = new Label("Terrain Type:");
     	//Choice Box
-    	ChoiceBox terrainList = new ChoiceBox<String>(FXCollections.observableArrayList(
+        _terrainList = new ChoiceBox<String>(FXCollections.observableArrayList(
     			"Alpine", "Desert", "Plains"));
-    	terrainList.setPrefWidth(100);
-    	terrainList.setPrefHeight(20);
-    	terrainList.getSelectionModel().selectFirst();
-//    	  terrainList.getSelectionModel().selectedIndexProperty().addListener(new
-//    	    		ChangeListener<Number>(){
-//
-//    	  }
+    	_terrainList.setPrefWidth(100);
+    	_terrainList.setPrefHeight(20);
+    	_terrainList.getSelectionModel().selectFirst();
+    	
+    	//Size Slider
+    	Label size = new Label("Terrain Size:");
+        _slider = new Slider(50, 400, 200);
+    	_slider.setShowTickLabels(true);
+    	_slider.setShowTickMarks(true);
+    	_slider.setMajorTickUnit(50);
+    	_slider.setBlockIncrement(.25f);
     	//Start Button
     	Button startBtn = new Button("Start");
     	startBtn.setOnAction(new StartHandler());
-    	mainMenu.getChildren().addAll(terrain, terrainList, startBtn);
+    	mainMenu.getChildren().addAll(terrain, _terrainList, size, _slider, startBtn);
     	_pane.setCenter(mainMenu);
     }
 
@@ -82,8 +89,9 @@ public class PaneOrganizer {
     private class StartHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent e){
-        	 //Game game = new Game();
-        	  //_pane.getChildren().add(game.getRoot());
+        	  Game game = new Game(_terrainList.getSelectionModel().getSelectedIndex(), 
+        			  _slider.getValue());
+        	  _pane.getChildren().addAll(game.getRoot());
         }
     }
 

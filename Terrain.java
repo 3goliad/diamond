@@ -128,7 +128,7 @@ public class Terrain {
     
     private void setTexture(){
     	Image gradient = new Image("/Indy/alpine.jpg");
-    	PhongMaterial texture = new PhongMaterial();
+    	PhongMaterial texture = new PhongMaterial(Color.PALEGREEN);
     	texture.setDiffuseMap(gradient);
     	PixelReader pixel = gradient.getPixelReader();
     	//Trying to get the maximum and minimum height of the mesh
@@ -138,13 +138,14 @@ public class Terrain {
 ////    	double max = ds.max().getAsDouble();
     	double min = -10;
     	double max = 40;
-    	double imageMax = gradient.getHeight();
-    	for (int i=0; i < _points.size(); i++){
-    		float point = _points.get(i);
-    		float coord = (float) scale(point, min, max, 0, imageMax);
-    		_terrainMesh.getTexCoords().addAll(coord);
-    		}
-    	_terrainMesh.getFaces().addAll(_faces);
+    	//turned off for now cuz its fucking other shit up
+//    	double imageMax = gradient.getHeight();
+//    	for (int i=0; i < _points.size(); i++){
+//    		float point = _points.get(i);
+//    		float coord = (float) scale(point, min, max, 0, imageMax);
+//    		_terrainMesh.getTexCoords().addAll(coord);
+//    		}
+//    	_terrainMesh.getFaces().addAll(_faces);
     	_terrainView = new MeshView(_terrainMesh);
     	_terrainView.setMaterial(texture);
     	}
