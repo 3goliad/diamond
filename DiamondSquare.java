@@ -3,14 +3,14 @@ package Indy;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class DiamondSquare {
-	
+
 	private int _dimension;
 	private int _detail;
 	private float _scale;
 	private float _smooth;
-	
+
 public DiamondSquare(int dimension, int detail, float scale, float smooth){
-	//Dimension controls the size of the map. Only 1 variable since it's always a square. 
+	//Dimension controls the size of the map. Only 1 variable since it's always a square.
 	_dimension = dimension;
 	//Detail controls the number of corners that are initiated at the start. Keep above 4 and below 8.
 	_detail = detail;
@@ -20,12 +20,16 @@ public DiamondSquare(int dimension, int detail, float scale, float smooth){
 	_smooth = smooth;
 }
 
-public float[][] generate(){
+public static float[][] generate(int dimension, int detail, float scale, float smooth){
+	//Dimension controls the size of the map. Only 1 variable since it's always a square.
+	//Detail controls the number of corners that are initiated at the start. Keep above 4 and below 8.
+	//Scale controls the elevation range
+	//Smooth controls how jagged/smooth the terrain is. Keep above 3 to avoid jagged edges.
 	//for adding up the corners
 		float avg;
 		int counter;
-	int regions = (int) java.lang.Math.pow(2, _detail);
-	int size = _dimension*regions + 1;
+	int regions = (int) java.lang.Math.pow(2, detail);
+	int size = dimension*regions + 1;
 	float[][] map = new float[size][size];
 	//s controls how long the steps are
 	int s = regions/2;
@@ -35,7 +39,7 @@ public float[][] generate(){
 			map[x][y] = (float) Math.random() * _scale;
 		}
 	}
-	//Until all points are filled 
+	//Until all points are filled
 	while (s > 0){
 		//The Diamond Step
 		for (int x = s; x<size; x+=2*s){

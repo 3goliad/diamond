@@ -82,8 +82,8 @@ public class Game{
 		_camera.setTranslateX(50);
 		_camera.setTranslateZ(0);
 		//Key/Mouse Input
-    _game.addEventHandler(KeyEvent.KEY_PRESSED, (ActionEvent e) -> {
-            int code = keyEvent.getCode();
+    _game.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent e) -> {
+            int code = e.getCode();
             if(code == UP || code == DOWN) {
                 _camera.setTranslateZ(_camera.getTranslateZ() + (code == UP ? 10 : -10));
                 System.out.println(_camera.getTranslateZ());
@@ -94,7 +94,7 @@ public class Game{
                 _camera.setTranslateY(_camera.getTranslateY() + (code == Q ? 5 : -10));
                 System.out.println(_camera.getTranslateY());
             }
-            keyEvent.consume();
+            e.consume();
         });
 	    //_game.addEventHandler(MouseEvent.MOUSE_MOVED, new MouseHandler());
 	    _game.requestFocus();
