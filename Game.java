@@ -47,19 +47,24 @@ public class Game{
 	private ImageView _cloudsView;
 	private ImageView _cloudsView2;
 	private float _scale, _smooth, _waterline;
+	private double _cameraXVelocity, _cameraYVelocity, _cameraZVelocity;
 
 	public Game(){
+	
       /* code handling the two cloudsView is scattered across the file, create a class? */
 		_cloudsView = new ImageView();
 		_cloudsView2 = new ImageView();
 		//controls the terrain dimensions
-		_size = 250;
+		_size = 200;
 		_detail = 6;
-		_scale = 40;
+		_scale = 20;
 		_smooth = 2;
 		_waterline = _scale;
 		
 		//Pane and Scene graph, 3d Group
+		_cameraXVelocity = 0;
+		_cameraYVelocity = 0;
+		_cameraZVelocity = 0;
 		_camera = new PerspectiveCamera(true);
 		_game = new BorderPane();
 		_root3d = new Group(_camera);
@@ -90,14 +95,22 @@ public class Game{
     _game.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent e) -> {
     	KeyCode code = e.getCode();
             if(code == KeyCode.UP || code == KeyCode.DOWN) {
-                _camera.setTranslateZ(_camera.getTranslateZ() + (code == KeyCode.UP ? 10 : -10));
-                System.out.println(_camera.getTranslateZ());
+                _cameraZVelocity = (code == KeyCode.UP ? Constants.CAMERA_SPEED : -Constants.CAMERA_SPEED);
             } else if(code == KeyCode.LEFT || code == KeyCode.RIGHT) {
-                _camera.setTranslateX(_camera.getTranslateX() + (code == KeyCode.RIGHT ? 5 : -5));
-                System.out.println(_camera.getTranslateX());
+            	 _cameraXVelocity = (code == KeyCode.RIGHT ? Constants.CAMERA_SPEED : -Constants.CAMERA_SPEED);
             } else if(code == KeyCode.Q || code == KeyCode.A) {
-                _camera.setTranslateY(_camera.getTranslateY() + (code == KeyCode.Q ? 5 : -10));
-                System.out.println(_camera.getTranslateY());
+            	 _cameraYVelocity = (code == KeyCode.Q ? Constants.CAMERA_SPEED : -Constants.CAMERA_SPEED);
+            }
+            e.consume();
+        });
+    _game.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent e) -> {
+    	KeyCode code = e.getCode();
+            if(code == KeyCode.UP || code == KeyCode.DOWN) {
+                _cameraZVelocity = 0;
+            } else if(code == KeyCode.LEFT || code == KeyCode.RIGHT) {
+            	 _cameraXVelocity = 0;
+            } else if(code == KeyCode.Q || code == KeyCode.A) {
+               _cameraYVelocity = 0;
             }
             e.consume();
         });
@@ -116,6 +129,9 @@ public class Game{
         KeyFrame kf = new KeyFrame(Duration.millis(1),
                  (ActionEvent e) -> {
                     scrollClouds();
+                    _camera.setTranslateY(_camera.getTranslateY()+_cameraYVelocity);
+                    _camera.setTranslateX(_camera.getTranslateX()+_cameraXVelocity);
+                    _camera.setTranslateZ(_camera.getTranslateZ()+_cameraZVelocity);
                  });
         Timeline timeline = new Timeline(kf);
         timeline.setCycleCount(Animation.INDEFINITE);
@@ -163,8 +179,6 @@ public class Game{
     	MeshView pyramid = terrain.getView();
 		pyramid.setDrawMode(DrawMode.FILL);
 		pyramid.setCullFace(CullFace.FRONT);
-		PhongMaterial bluestuff = new PhongMaterial(Color.FORESTGREEN);
-		pyramid.setMaterial(bluestuff);
 	    // Terrain has set of objects implementing Structure that contain the ways that they change the base terrain
     	Buildings buildings = new Buildings(terrain.getMap(), _size, _waterline);
       // possible to change mesh coords with low overhead?
@@ -176,9 +190,9 @@ public class Game{
 //		buildingtest.setMaterial(redstuff);
     	//water
     	Water water = new Water(_size, _waterline);
-		_root3d.getChildren().addAll(pyramid, towns, water.getWater());
+		_root3d.getChildren().addAll( pyramid, towns, water.getWater(), terrain.populateDiamond());
     }
 
-
+   
 
 }
