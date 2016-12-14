@@ -67,7 +67,8 @@ public class PaneOrganizer {
     	_slider.setShowTickLabels(true);
     	_slider.setShowTickMarks(true);
     	_slider.setMajorTickUnit(50);
-    	_slider.setBlockIncrement(.25f);
+    	_slider.setBlockIncrement(5);
+    	_slider.setSnapToTicks(true);
     	//Start Button
     	Button startBtn = new Button("Start");
     	startBtn.setOnAction(new StartHandler());

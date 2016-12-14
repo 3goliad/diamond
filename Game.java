@@ -44,8 +44,7 @@ public class Game{
 	private Camera _camera;
 	private Group _root3d;
 	private int _size,  _detail;
-	private ImageView _cloudsView;
-	private ImageView _cloudsView2;
+	private Clouds _clouds;
 	private float _scale, _smooth, _waterline;
 	private double _cameraXVelocity, _cameraYVelocity, _cameraZVelocity;
 
@@ -72,9 +71,6 @@ public class Game{
 			_waterline = _scale;
 		}
 		
-		 /* code handling the two cloudsView is scattered across the file, create a class? */
-		_cloudsView = new ImageView();
-		_cloudsView2 = new ImageView();
 		
 		//Pane and Scene graph, 3d Group
 		_cameraXVelocity = 0;
@@ -92,8 +88,9 @@ public class Game{
 				light2.setTranslateX(_size/2);
 				light2.setTranslateZ(_size/2);
 				_root3d.getChildren().addAll(light, light2);
+		_clouds = new Clouds(_size);
 		this.terrainSetUp();
-		this.cloudSetUp();
+		
 		  SubScene subScene = new SubScene(_root3d, Constants.SCENE_WIDTH, Constants.SCENE_HEIGHT, true,
 	                SceneAntialiasing.BALANCED);
 	       subScene.setCamera(_camera);
@@ -143,7 +140,7 @@ public class Game{
 	public void setupTimeline(){
         KeyFrame kf = new KeyFrame(Duration.millis(1),
                  (ActionEvent e) -> {
-                    scrollClouds();
+                    _clouds.scrollClouds();
                     _camera.setTranslateY(_camera.getTranslateY()+_cameraYVelocity);
                     _camera.setTranslateX(_camera.getTranslateX()+_cameraXVelocity);
                     _camera.setTranslateZ(_camera.getTranslateZ()+_cameraZVelocity);
@@ -153,40 +150,8 @@ public class Game{
         timeline.play();
     }
 
-    /* could be a scroll method on a cloud holding class */
-	 private void scrollClouds(){
-		 _cloudsView.setX(_cloudsView.getX()+.001);
-		 _cloudsView2.setX(_cloudsView2.getX()-.001);
-		 if (_cloudsView.getX()>=_size){
-		_cloudsView.setX(-_size);
-		 }
-		 if (_cloudsView2.getX()<=-_size*2){
-		_cloudsView2.setX(0);
-		 }
-	 }
-
-    private void cloudSetUp(){
-    	Clouds clouds = new Clouds(_size);
-    	Image cloudsImage = clouds.generate();
-    	Rectangle2D viewport = new Rectangle2D(0, 0, _size, _size);
-    	//First Tile
-    	_cloudsView.setImage(cloudsImage);
-    	_cloudsView.setViewport(viewport);
-    	_cloudsView.getTransforms().add(new Rotate(-90, Rotate.X_AXIS));
-    	_cloudsView.setTranslateY(-50);
-    	_cloudsView.setTranslateZ(_size);
-    	//Stretch transform so the clouds bleed over the terrain edge a bit
-    	_cloudsView.getTransforms().add(new Scale(1, 1.3));
-    	//Second Tile
-    	_cloudsView2.setImage(cloudsImage);
-    	_cloudsView2.setViewport(viewport);
-    	_cloudsView2.getTransforms().add(new Rotate(-90, Rotate.X_AXIS));
-    	_cloudsView2.setTranslateY(-50);
-    	_cloudsView2.setTranslateZ(_size);
-    	_cloudsView2.getTransforms().add(new Rotate(-180, Rotate.Y_AXIS));
-    	_cloudsView2.getTransforms().add(new Scale(1, 1.3));
-    	_root3d.getChildren().addAll(_cloudsView, _cloudsView2);
-    }
+  
+ 
 
     private void terrainSetUp(){
     	//Terrain
@@ -205,7 +170,7 @@ public class Game{
 //		buildingtest.setMaterial(redstuff);
     	//water
     	Water water = new Water(_size, _waterline);
-		_root3d.getChildren().addAll( pyramid, towns, water.getWater(), terrain.populateDiamond());
+		_root3d.getChildren().addAll( pyramid, towns, water.getWater(), terrain.populateDiamond(), _clouds.cloudSetUp());
     }
 
    
