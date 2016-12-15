@@ -1,6 +1,5 @@
 package edu.indy;
 
-import Indy.fxyz3d.shapes.composites.PolyLine3D;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

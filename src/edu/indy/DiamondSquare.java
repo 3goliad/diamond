@@ -4,22 +4,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class DiamondSquare {
 
-	private int _dimension;
-	private int _detail;
-	private float _scale;
-	private float _smooth;
-
-public DiamondSquare(int dimension, int detail, float scale, float smooth){
-	//Dimension controls the size of the map. Only 1 variable since it's always a square.
-	_dimension = dimension;
-	//Detail controls the number of corners that are initiated at the start. Keep above 4 and below 8.
-	_detail = detail;
-	//Scale controls the elevation range
- 	_scale = scale;
-	//Smooth controls how jagged/smooth the terrain is. Keep above 3 to avoid jagged edges.
-	_smooth = smooth;
-}
-
 public static float[][] generate(int dimension, int detail, float scale, float smooth){
 	//Dimension controls the size of the map. Only 1 variable since it's always a square.
 	//Detail controls the number of corners that are initiated at the start. Keep above 4 and below 8.
@@ -36,7 +20,7 @@ public static float[][] generate(int dimension, int detail, float scale, float s
 	//Fill the array with initial grid points
 	for (int x=0; x<size; x+=2*s){
 		for (int y=0; y<size; y+=2*s){
-			map[x][y] = (float) Math.random() * _scale;
+			map[x][y] = (float) Math.random() * scale;
 		}
 	}
 	//Until all points are filled
@@ -44,7 +28,7 @@ public static float[][] generate(int dimension, int detail, float scale, float s
 		//The Diamond Step
 		for (int x = s; x<size; x+=2*s){
 			for (int y = s; y<size; y +=2*s){
-				float random = (float) ThreadLocalRandom.current().nextDouble(-(_scale), _scale);
+				float random = (float) ThreadLocalRandom.current().nextDouble(-(scale), scale);
 				//Sum of all initial points
 				avg = map[x+s][y+s] +
 					  map[x-s][y+s] +
@@ -78,7 +62,7 @@ public static float[][] generate(int dimension, int detail, float scale, float s
 				}
 	
 				if (counter > 0){
-				float random = (float) ThreadLocalRandom.current().nextDouble(-(_scale), _scale);
+				float random = (float) ThreadLocalRandom.current().nextDouble(-(scale), scale);
 				map[x][y] = avg/counter + random;
 				} else {
 				map[x][y] = 0;
@@ -88,7 +72,7 @@ public static float[][] generate(int dimension, int detail, float scale, float s
 		//S gets cut in half after each sequence of steps
 		s /= 2;
 		//Reduce scale by smoothing factor after each step
-		_scale /= _smooth;
+		scale /= smooth;
 	}
 	//Now output the filled array.
 	return map;
