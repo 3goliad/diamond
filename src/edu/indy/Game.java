@@ -1,5 +1,6 @@
 package edu.indy;
 
+import Indy.fxyz3d.shapes.composites.PolyLine3D;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -83,7 +84,7 @@ public class Game{
 		//Camera set up
 		_camera.setNearClip(.1);
 		_camera.setFarClip(1000000);
-		_camera.getTransforms().add(new Rotate(-60, Rotate.X_AXIS));
+		_camera.getTransforms().add(new Rotate(-70, Rotate.X_AXIS));
 		_camera.setTranslateY(-100);
 		_camera.setTranslateX(50);
 		_camera.setTranslateZ(0);
@@ -128,11 +129,25 @@ public class Game{
                     _camera.setTranslateY(_camera.getTranslateY()+_cameraYVelocity);
                     _camera.setTranslateX(_camera.getTranslateX()+_cameraXVelocity);
                     _camera.setTranslateZ(_camera.getTranslateZ()+_cameraZVelocity);
+                    this.bounceCamera();
                  });
         Timeline timeline = new Timeline(kf);
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }
+	
+	private void bounceCamera(){
+//		double height = _camera.getTranslateY();
+//		if (_camera.getTranslateX() > _size - 10/height){
+//			_camera.setTranslateX(_size -11/height);
+//		} else if (_camera.getTranslateX()< 10 /height ){
+//			_cameraXVelocity = 0;
+//		} else if (_camera.getTranslateZ() > _size- 100/height ){
+//			_cameraZVelocity = 0;
+//		} else if (_camera.getTranslateZ() < 0 - height ){
+//			_cameraZVelocity = 0;
+//		}
+	}
 
   
  
