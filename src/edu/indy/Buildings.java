@@ -1,11 +1,11 @@
-package Indy;
+package edu.indy;
 
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.concurrent.ThreadLocalRandom;
 
-import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -26,18 +26,19 @@ public class Buildings{
 	private float[][] _heightmap;	
 	private int _size;
 	private int _s;
+	private float _waterline;
 	private PriorityQueue<Point3D> _sortedCorners;
 	
-	public Buildings(float[][] heightmap, int size){
+	public Buildings(float[][] heightmap, int size, float waterline){
+		_waterline = waterline;
 		_heightmap = heightmap;
 		_size = size;
-		_s = 0;
+	    _s = _size / Constants.GRID_SQUARES;
 		this.createRegions();
 	}
 	
 	public void createRegions(){
 		//_size values should end in 0 or 5 to avoid problems with this
-		int _s = _size / Constants.GRID_SQUARES;
 		
 		//Using arraylist to keep track of each square. 
 		//Point3D in order to store the deviation of the region in the Z value
@@ -54,6 +55,7 @@ public class Buildings{
 		for (int i = 0; i < corners.size(); i++){
 			Point3D point = corners.get(i);
 			float avg = 0;
+			int counter = 0;
 			float high = _heightmap[(int)point.getX()][(int)point.getY()];
 			float low = _heightmap[(int)point.getX()][(int)point.getY()];
 			for (int x = ((int)point.getX()) - _s; x<point.getX(); x++){
@@ -66,22 +68,28 @@ public class Buildings{
 						low = height;
 					}
 					//add it to average
-					avg =+ height;
+					avg = avg+height;
+					counter++;
 				}
-				//calculate mean
-				avg = avg / x;
+	
 			}
+			avg = avg / (counter);
 			//weigh according to mean
-			double difference = (high - low)+avg*2;
+			//double difference = (high - low)+avg*8;
+			double difference = (high - low)-avg;
+			//no underwater towns
+			if (avg< _waterline){
+				difference = difference*4;
+			}
 			
+			//if 
 			//remove and reinsert
 			Point3D newpoint = new Point3D(point.getX(), point.getY(), difference);
 			corners.set(i, newpoint);
 			
 		}
-		//Now we transfer the arraylist to a  priority queue 
-		Comparator<Point3D> comparator = new Point3DComparator();
-		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), comparator);
+		//Now we transfer the arraylist to a  priority queue
+		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), Comparator.comparingDouble(Point3D::getZ).reversed());
 		for (Point3D point : corners){
 			sortedCorners.add(point);
 		}
@@ -94,21 +102,56 @@ public class Buildings{
 		}
 	
 	public Group spawnBuildings(){
-		PhongMaterial buildingColor = new PhongMaterial(Color.RED);
 		Group towns = new Group();
 		for (Point3D point: _sortedCorners){
-			Box building = new Box(3, 3, 1);
-			building.setMaterial(buildingColor);
-			double x = point.getX()-(_s/2);
-			double y = point.getY()-(_s/2);
-			building.setTranslateX(x);
-			building.setTranslateZ(y);
-			float elevation = _heightmap[(int)building.getTranslateX()][(int)building.getTranslateZ()];
-			building.setTranslateY(elevation);
-			towns.getChildren().add(building);
+
+			double x = point.getX();
+            double y = point.getY();
+		 x = x-(_s/2);
+			y = y-(_s/2);
+			
+			Group town = spawnTown(x, y);
+			towns.getChildren().add(town);
 		}
 		return towns;
 		
+	}
+	
+	private Group spawnTown(double x, double y){
+		double og = x;
+		Group town = new Group();
+		PhongMaterial buildingColor = new PhongMaterial(Color.GRAY);
+		int townsize = ThreadLocalRandom.current().nextInt(2, 12);
+		for (int i=0; i <townsize; i++){
+			float elevation = _heightmap[(int)x][(int)y];
+			if (elevation < _waterline){
+			double j = ThreadLocalRandom.current().nextDouble(0, 1);
+			Box building = new Box(1+j, 1+j, 1);
+			building.setMaterial(buildingColor);
+			building.setTranslateX(x);
+			building.setTranslateZ(y);
+			
+			//prevent buildings from spawning on sharp slopes
+			//probably a more efficient way to do this  
+			//actually this crashes the game
+//			float[] neighbors = { _heightmap[(int)x-1][(int)y-1], _heightmap[(int)x+1][(int)y+1],  _heightmap[(int)x+1][(int)y-1], 
+//					_heightmap[(int)x-1][(int)y+1],  _heightmap[(int)x][(int)y-1],  _heightmap[(int)x-1][(int)y], 
+//					_heightmap[(int)x][(int)y+1], _heightmap[(int)x+1][(int)y], _heightmap[(int)x][(int)y] };
+//			for (int z=0; i<neighbors.length; z++){
+//				if (neighbors[i]>(elevation+2) | neighbors[i]<(elevation-2)){
+//					x = x+5;
+//				}
+//			}
+			building.setTranslateY(elevation);
+			town.getChildren().add(building);
+			x = x + 2 +j;
+			if (x > og+(townsize*.6)){
+				x = og;
+				y = y + 2;
+			}
+			}
+		}
+		return town;
 	}
 	
 }
