@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 public class Constants {
 	public static final int SCENE_WIDTH = 800;

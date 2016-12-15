@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 
 import java.util.ArrayList;
@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -89,9 +88,8 @@ public class Buildings{
 			corners.set(i, newpoint);
 			
 		}
-		//Now we transfer the arraylist to a  priority queue 
-		Comparator<Point3D> comparator = new Point3DComparator();
-		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), comparator);
+		//Now we transfer the arraylist to a  priority queue
+		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), Comparator.comparingDouble(Point3D::getZ).reversed());
 		for (Point3D point : corners){
 			sortedCorners.add(point);
 		}

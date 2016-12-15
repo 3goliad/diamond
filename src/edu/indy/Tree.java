@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -12,7 +12,7 @@ public class Tree extends Placeable{
 	private Image _tree;
 	
 	public Tree(){
-		_tree = new Image("/Indy/tree.png", 5, 9, true, false);
+		_tree = new Image("/assets/tree.png", 5, 9, true, false);
 	}
 	 
 	private ColorAdjust ColorEffect(){

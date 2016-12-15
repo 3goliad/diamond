@@ -1,14 +1,11 @@
-package Indy;
+package edu.indy;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
-import javafx.scene.Camera;
 import javafx.scene.control.*;
 import javafx.geometry.*;
 import javafx.event.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.DepthTest;
-import javafx.collections.ObservableList;
 
 /* This class provides overall organization to the application through a BorderPane.
 * It instantiates Game and adds it to the BorderPane. It also adds an exit Button

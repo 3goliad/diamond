@@ -1,10 +1,6 @@
-package Indy;
+package edu.indy;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableFloatArray;
@@ -16,12 +12,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
-
-import java.util.Arrays;
 
 public class Terrain {
 		private ObservableFloatArray _points;
@@ -127,7 +120,7 @@ public class Terrain {
     }
     
     private void setTexture(){
-    	Image gradient = new Image("/Indy/alpine.jpg");
+    	Image gradient = new Image("/assets/alpine.jpg");
     	PhongMaterial texture = new PhongMaterial(Color.PALEGREEN);
     	texture.setDiffuseMap(gradient);
     	PixelReader pixel = gradient.getPixelReader();

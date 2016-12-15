@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;

@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 import java.util.concurrent.ThreadLocalRandom;
 

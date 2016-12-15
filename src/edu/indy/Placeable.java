@@ -1,4 +1,4 @@
-package Indy;
+package edu.indy;
 
 import javafx.geometry.Point3D;
 import javafx.scene.Node;
