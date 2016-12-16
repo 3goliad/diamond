@@ -8,24 +8,24 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Tree extends Placeable{
+public class Tree extends Placeable {
 	private Image _tree;
-	
-	public Tree(){
+
+	public Tree() {
 		_tree = new Image("/assets/tree.png", 5, 9, true, false);
 	}
-	 
-	private ColorAdjust ColorEffect(){
+
+	private ColorAdjust ColorEffect() {
 		ColorAdjust colorAdjust = new ColorAdjust();
 		double tint = ThreadLocalRandom.current().nextDouble(-.1, .1);
 		colorAdjust.setHue(tint);
 		return colorAdjust;
 	}
-	
-	public ImageView getView(){
+
+	public ImageView getView() {
 		ImageView _treeview = new ImageView(_tree);
-		//_treeview.setEffect(ColorEffect());
-		Rectangle2D viewport = new Rectangle2D(0, 0, 5, 9 );
+		// _treeview.setEffect(ColorEffect());
+		Rectangle2D viewport = new Rectangle2D(0, 0, 5, 9);
 		_treeview.setViewport(viewport);
 		_treeview.setScaleX(.25);
 		_treeview.setScaleY(.25);
@@ -34,10 +34,9 @@ public class Tree extends Placeable{
 		_treeview.setOpacity(.6);
 		return _treeview;
 	}
-	
-	void Place(ImageView tree, Point3D loc){
+
+	void Place(ImageView tree, Point3D loc) {
 		super.Place(tree, loc);
 	}
-	
-}
 
+}
