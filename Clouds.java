@@ -1,4 +1,4 @@
-package edu.indy;
+package Indy;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -15,6 +15,13 @@ public class Clouds {
 	private ImageView _cloudsView;
 	private ImageView _cloudsView2;
 
+	/*
+	 * This class generates clouds by using the diamond-square algorithm to
+	 * write to an image, determining the transparency of each pixel. The clouds
+	 * exist as an imageview that infinitely scrolls above the terrain, which
+	 * happens in the scrollClouds() method.
+	 */
+
 	public Clouds(int size) {
 		_size = size;
 		_clouds = new WritableImage(_size, _size);
@@ -23,8 +30,13 @@ public class Clouds {
 		this.generate();
 	}
 
+	/*
+	 * Creates a diamondsquare, uses it to write an image with the floats
+	 * controlling alpha value in each pixel.
+	 */
 	public void generate() {
-		float[][] transparencyArray = DiamondSquare.generate(_size, 4, 1, 3);
+		DiamondSquare transparency = new DiamondSquare(_size, 4, 1, 3);
+		float[][] transparencyArray = transparency.generate();
 		PixelWriter pixelWriter = _clouds.getPixelWriter();
 		float lastvalue = 0;
 		for (int x = 0; x < _size; x++) {
@@ -42,6 +54,11 @@ public class Clouds {
 		}
 	}
 
+	/*
+	 * Sets up the cloud "treadmill." The cloud image is reflected to create a
+	 * seamless transition between two tiles, each the size of the terrain,
+	 * which are endlessly scrolled over the landscape.
+	 */
 	public Group cloudSetUp() {
 		Group cloudGroup = new Group();
 		Rectangle2D viewport = new Rectangle2D(0, 0, _size, _size);
@@ -49,7 +66,7 @@ public class Clouds {
 		_cloudsView.setImage(_clouds);
 		_cloudsView.setViewport(viewport);
 		_cloudsView.getTransforms().add(new Rotate(-90, Rotate.X_AXIS));
-		_cloudsView.setTranslateY(-50);
+		_cloudsView.setTranslateY(-70);
 		_cloudsView.setTranslateZ(_size);
 		// Stretch transform so the clouds bleed over the terrain edge a bit
 		_cloudsView.getTransforms().add(new Scale(1, 1.3));
@@ -57,23 +74,24 @@ public class Clouds {
 		_cloudsView2.setImage(_clouds);
 		_cloudsView2.setViewport(viewport);
 		_cloudsView2.getTransforms().add(new Rotate(-90, Rotate.X_AXIS));
-		_cloudsView2.setTranslateY(-50);
+		_cloudsView2.setTranslateY(-70);
 		_cloudsView2.setTranslateZ(_size);
 		_cloudsView2.getTransforms().add(new Rotate(-180, Rotate.Y_AXIS));
 		_cloudsView2.getTransforms().add(new Scale(1, 1.3));
 		cloudGroup.getChildren().addAll(_cloudsView, _cloudsView2);
 		return cloudGroup;
 	}
-	
-	public void setOpacity(double alpha){
+
+	/* Used to set the opacity of the clouds according to the time of day */
+	public void setOpacity(double alpha) {
 		_cloudsView.setOpacity(alpha);
 		_cloudsView2.setOpacity(alpha);
 	}
 
-	/* could be a scroll method on a cloud holding class */
+	/* Scrolls the clouds and executes the treadmill functionality. */
 	public void scrollClouds() {
-		_cloudsView.setX(_cloudsView.getX() + .001);
-		_cloudsView2.setX(_cloudsView2.getX() - .001);
+		_cloudsView.setX(_cloudsView.getX() + .01);
+		_cloudsView2.setX(_cloudsView2.getX() - .01);
 		if (_cloudsView.getX() >= _size) {
 			_cloudsView.setX(-_size);
 		}

@@ -1,31 +1,32 @@
-package edu.indy;
+package Indy;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
-
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.transform.Rotate;
 
 public class Buildings {
 	/*
-	 * Plan Take the array of floats Split it into 25 sections (less for smaller
-	 * maps..) Find the flattest parts (sections with the least variation?
-	 * possibly just the smallest difference between largest and smallest float)
-	 * Generate a random number of rectangles in a grid pattern set their -y to
-	 * the float value (might have to tweak this)
+	 * This class is used to generate the towns on the terrain. It uses a custom
+	 * algorithm to determine tiles on the map most suitable for towns. It then
+	 * generates them on those tiles.
 	 */
 	private float[][] _heightmap;
 	private int _size;
 	private int _s;
 	private float _waterline;
 	private PriorityQueue<Point3D> _sortedCorners;
+	private Image _buildingmap;
 
 	public Buildings(float[][] heightmap, int size, float waterline) {
+		_buildingmap = new Image("/Indy/buildingmap.jpg");
 		_waterline = waterline;
 		_heightmap = heightmap;
 		_size = size;
@@ -33,9 +34,13 @@ public class Buildings {
 		this.createRegions();
 	}
 
+	/*
+	 * This divides the heightmap float array into tiles, and cycles through
+	 * them to determine the best candidates (those which are the flattest and
+	 * closest to water). It uses a priority queue and comparator to create a
+	 * list of towns according to favorability.
+	 */
 	public void createRegions() {
-		// _size values should end in 0 or 5 to avoid problems with this
-
 		// Using arraylist to keep track of each square.
 		// Point3D in order to store the deviation of the region in the Z value
 		ArrayList<Point3D> corners = new ArrayList<Point3D>();
@@ -70,34 +75,34 @@ public class Buildings {
 
 			}
 			avg = avg / (counter);
-			// weigh according to mean
-			// double difference = (high - low)+avg*8;
+			// weigh according to mean elevation
 			double difference = (high - low) - avg;
-			// no underwater towns
+			// prevent underwater towns by weighing against tiles with an
+			// average height
+			// below the waterline
 			if (avg < _waterline) {
 				difference = difference * 4;
 			}
 
-			// if
-			// remove and reinsert
 			Point3D newpoint = new Point3D(point.getX(), point.getY(), difference);
 			corners.set(i, newpoint);
 
 		}
 		// Now we transfer the arraylist to a priority queue
-		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(),
-				Comparator.comparingDouble(Point3D::getZ).reversed());
+		Comparator<Point3D> comparator = new Point3DComparator();
+		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), comparator);
 		for (Point3D point : corners) {
 			sortedCorners.add(point);
 		}
 		// Remove everything but the lowest fifth using the Comparator
-		for (int i = 0; i < (int) corners.size() * .8; i++) {
+		for (int i = 0; i < (int) corners.size() * .85; i++) {
 			sortedCorners.remove();
 		}
 		//
 		_sortedCorners = sortedCorners;
 	}
 
+	/* This plants a town at the middle of the selected tiles. */
 	public Group spawnBuildings() {
 		Group towns = new Group();
 		for (Point3D point : _sortedCorners) {
@@ -114,41 +119,37 @@ public class Buildings {
 
 	}
 
+	/*
+	 * This creates a randomized grid of buildings at the town location.
+	 */
 	private Group spawnTown(double x, double y) {
+		// Original x location
 		double og = x;
+		// Group for scene graph
 		Group town = new Group();
-		PhongMaterial buildingColor = new PhongMaterial(Color.GRAY);
-		int townsize = ThreadLocalRandom.current().nextInt(2, 12);
+
+		int townsize = ThreadLocalRandom.current().nextInt(2, 20);
 		for (int i = 0; i < townsize; i++) {
 			float elevation = _heightmap[(int) x][(int) y];
-			if (elevation < _waterline) {
-				double j = ThreadLocalRandom.current().nextDouble(0, 1);
-				Box building = new Box(1 + j, 1 + j, 1);
+			if ((elevation < _waterline - 2) && (y < _size) && (x > 0)) {
+				// Jitter variables
+				double j = ThreadLocalRandom.current().nextDouble(0, 2);
+				double w = ThreadLocalRandom.current().nextDouble(0, 2);
+				double z = ThreadLocalRandom.current().nextDouble(0, 2);
+				int rotate = ThreadLocalRandom.current().nextInt(-1, 1);
+				Box building = new Box(1 + j, 1 + z, 1 + w);
+				PhongMaterial buildingColor = new PhongMaterial(Color.rgb(100 + 50 * rotate, 100, 100 - 50 * rotate));
+				buildingColor.setSelfIlluminationMap(_buildingmap);
 				building.setMaterial(buildingColor);
 				building.setTranslateX(x);
 				building.setTranslateZ(y);
-
-				// prevent buildings from spawning on sharp slopes
-				// probably a more efficient way to do this
-				// actually this crashes the game
-				// float[] neighbors = { _heightmap[(int)x-1][(int)y-1],
-				// _heightmap[(int)x+1][(int)y+1],
-				// _heightmap[(int)x+1][(int)y-1],
-				// _heightmap[(int)x-1][(int)y+1], _heightmap[(int)x][(int)y-1],
-				// _heightmap[(int)x-1][(int)y],
-				// _heightmap[(int)x][(int)y+1], _heightmap[(int)x+1][(int)y],
-				// _heightmap[(int)x][(int)y] };
-				// for (int z=0; i<neighbors.length; z++){
-				// if (neighbors[i]>(elevation+2) | neighbors[i]<(elevation-2)){
-				// x = x+5;
-				// }
-				// }
-				building.setTranslateY(elevation);
+				building.setTranslateY(elevation - 1);
+				building.getTransforms().add(new Rotate(180 * rotate, Rotate.Y_AXIS));
 				town.getChildren().add(building);
 				x = x + 2 + j;
-				if (x > og + (townsize * .6)) {
-					x = og;
-					y = y + 2;
+				if (x > og + (townsize * .5 / j)) {
+					x = og + w;
+					y = y + 2 + z;
 				}
 			}
 		}
