@@ -48,7 +48,13 @@ public class PaneOrganizer {
 		_bottomPane.setAlignment(Pos.BOTTOM_LEFT);
 		Button exitBtn = new Button("Exit");
 		_bottomPane.getChildren().addAll(exitBtn);
-		exitBtn.setOnAction(new ExitHandler());
+		exitBtn.setOnAction(new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent e) {
+			Platform.exit();
+			e.consume();
+		}
+	});
 		_pane.setBottom(_bottomPane);
 	}
 
@@ -86,22 +92,8 @@ public class PaneOrganizer {
 		_slider.setSnapToTicks(true);
 		// Start Button
 		Button startBtn = new Button("Start");
-		startBtn.setOnAction(new StartHandler());
-		_mainMenu.getChildren().addAll(controls, terrain, _terrainList, time, _timeList, size, _slider, startBtn);
-		_pane.setCenter(_mainMenu);
-	}
-
-	/* Adding click functionality to the button */
-	private class ExitHandler implements EventHandler<ActionEvent> {
-		@Override
-		public void handle(ActionEvent e) {
-			Platform.exit();
-			e.consume();
-		}
-	}
-
-	/* Start button should begin the game */
-	private class StartHandler implements EventHandler<ActionEvent> {
+		/* Start button should begin the game */
+		startBtn.setOnAction(new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent e) {
 			Game game = new Game(_terrainList.getSelectionModel().getSelectedIndex(), _slider.getValue(),
@@ -109,6 +101,8 @@ public class PaneOrganizer {
 			_pane.getChildren().removeAll(_bottomPane, _mainMenu);
 			_pane.getChildren().addAll(game.getRoot(), _bottomPane);
 		}
+	});
+		_mainMenu.getChildren().addAll(controls, terrain, _terrainList, time, _timeList, size, _slider, startBtn);
+		_pane.setCenter(_mainMenu);
 	}
-
 }

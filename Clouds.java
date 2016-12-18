@@ -35,8 +35,7 @@ public class Clouds {
 	 * controlling alpha value in each pixel.
 	 */
 	public void generate() {
-		DiamondSquare transparency = new DiamondSquare(_size, 4, 1, 3);
-		float[][] transparencyArray = transparency.generate();
+		float[][] transparencyArray = DiamondSquare.generate(_size, 4, 1, 3);
 		PixelWriter pixelWriter = _clouds.getPixelWriter();
 		float lastvalue = 0;
 		for (int x = 0; x < _size; x++) {

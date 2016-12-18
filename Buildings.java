@@ -89,8 +89,7 @@ public class Buildings {
 
 		}
 		// Now we transfer the arraylist to a priority queue
-		Comparator<Point3D> comparator = new Point3DComparator();
-		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), comparator);
+		PriorityQueue<Point3D> sortedCorners = new PriorityQueue<Point3D>(corners.size(), Comparator.comparingDouble(Point3D::getZ).reversed());
 		for (Point3D point : corners) {
 			sortedCorners.add(point);
 		}

@@ -126,8 +126,20 @@ public class Game {
 		_boomMap = new Image("/Indy/Boom.jpg");
 		_burn = new Image("/Indy/burnttree.png");
 		_terrainView = new MeshView();
-		// Create the terrain
-		this.terrainSetUp();
+		// Creates a terrain object, adds buildings and water, and then adds it to
+		// the scene graph.
+		// Terrain
+		Terrain terrain = new Terrain(_size, _detail, _scale, _smooth, _biome);
+		_terrainView = terrain.getView();
+		_terrainView.setDrawMode(DrawMode.FILL);
+		_terrainView.setCullFace(CullFace.FRONT);
+		Buildings buildings = new Buildings(terrain.getMap(), _size, _waterline);
+		_towns = buildings.spawnBuildings();
+		// water
+		Water water = new Water(_size, _waterline);
+		// Trees
+		_trees = terrain.populateDiamond();
+		_root3d.getChildren().addAll(_terrainView, _towns, water.getWater(), _trees);
 		// create clouds, gives them their own group so
 		// they don't interfere with explosions in the scene graph.
 		_clouds = new Clouds(_size);
@@ -413,24 +425,4 @@ public class Game {
 			_camera.setTranslateY(-51 + height);
 		}
 	}
-
-	/*
-	 * Creates a terrain object, adds buildings and water, and then adds it to
-	 * the scene graph.
-	 */
-	private void terrainSetUp() {
-		// Terrain
-		Terrain terrain = new Terrain(_size, _detail, _scale, _smooth, _biome);
-		_terrainView = terrain.getView();
-		_terrainView.setDrawMode(DrawMode.FILL);
-		_terrainView.setCullFace(CullFace.FRONT);
-		Buildings buildings = new Buildings(terrain.getMap(), _size, _waterline);
-		_towns = buildings.spawnBuildings();
-		// water
-		Water water = new Water(_size, _waterline);
-		// Trees
-		_trees = terrain.populateDiamond();
-		_root3d.getChildren().addAll(_terrainView, _towns, water.getWater(), _trees);
-	}
-
 }
