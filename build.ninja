@@ -1,0 +1,13 @@
+# vim: expandtab ts=2 sw=2:
+
+cflags = -Wall -lSDL -std=c++14
+emccflags = -Wall --emrun
+
+rule cxx
+  command = clang++ $cflags -o $out $in
+
+rule ecc
+  command = emcc $emccflags -o $out $in
+
+build indy: cxx src/indy.cpp
+build indy.html: ecc src/indy.cpp
