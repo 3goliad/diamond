@@ -1,8 +1,6 @@
-build/
+build/*
 
 .ninja_log
 .ninja_deps
 
-indy
-indy.js
-indy.html
+.vagrant/
