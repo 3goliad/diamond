@@ -9,5 +9,12 @@ rule cxx
 rule ecc
   command = emcc $emccflags -o $out $in
 
-build indy: cxx src/indy.cpp
-build indy.html: ecc src/indy.cpp
+rule cp
+  command = cp $in $out
+
+build build/assets/alpine.jpg: cp assets/alpine.jpg
+
+build build/indy: cxx src/indy.cpp $
+| build/assets/alpine.jpg
+
+build build/indy.html | build/indy.js: ecc src/indy.cpp
