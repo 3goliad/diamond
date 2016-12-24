@@ -3,6 +3,9 @@
 cflags = -Wall -lSDL2 -lSDL2_image -std=c++14
 emccflags = -Wall -s USE_SDL=2 -s USE_SDL_IMAGE=2 --emrun
 
+rule install_emsdk
+  command = curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
+
 rule cxx
   command = clang++ $cflags -o $out $in
 
@@ -12,12 +15,12 @@ rule ecc
 rule cp
   command = cp $in $out
 
-build build/assets/alpine.jpg: cp assets/alpine.jpg
+build target/assets/alpine.jpg: cp assets/alpine.jpg
 
-build build/favicon.ico: cp assets/favicon.ico
+build target/favicon.ico: cp assets/favicon.ico
 
-build build/indy: cxx src/indy.cpp $
-| build/assets/alpine.jpg
+build target/diamond: cxx src/diamond.cpp $
+| target/assets/alpine.jpg
 
-build build/indy.html | build/indy.js: ecc src/indy.cpp $
-| build/favicon.ico
+build target/diamond.html | target/diamond.js: ecc src/diamond.cpp $
+| target/favicon.ico

@@ -3,4 +3,6 @@ build/*
 .ninja_log
 .ninja_deps
 
+tools/
+
 .vagrant/
