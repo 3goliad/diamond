@@ -1,20 +1,23 @@
 # vim: expandtab ts=2 sw=2:
 
-cflags = -Wall -lSDL -std=c++14
-emccflags = -Wall --emrun
+cflags = -Wall -lSDL2 -lSDL2_image -std=c++14
+emccflags = -Wall -s USE_SDL=2 -s USE_SDL_IMAGE=2 --emrun
 
 rule cxx
   command = clang++ $cflags -o $out $in
 
 rule ecc
-  command = emcc $emccflags -o $out $in
+  command = emcc $emccflags -o $out $in --preload-file assets/
 
 rule cp
   command = cp $in $out
 
 build build/assets/alpine.jpg: cp assets/alpine.jpg
 
+build build/favicon.ico: cp assets/favicon.ico
+
 build build/indy: cxx src/indy.cpp $
 | build/assets/alpine.jpg
 
-build build/indy.html | build/indy.js: ecc src/indy.cpp
+build build/indy.html | build/indy.js: ecc src/indy.cpp $
+| build/favicon.ico
