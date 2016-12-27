@@ -4,9 +4,6 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#include "image_loader.h"
-#pragma clang diagnostic pop
 
 SDL_Window *window;
 SDL_Surface *screen;
