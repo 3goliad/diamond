@@ -1,8 +1,8 @@
 CC := clang++
 EMCC := tools/emsdk/emscripten/master/em++
 CFLAGS := -c -Wall -std=c++14
-EMCCFLAGS := -Wall -s USE_SDL=2 -s USE_SDL_IMAGE=2 --emrun
-LDFLAGS := -Wl,-lstdc++,-lSDL2,-lSDL2_image
+EMCCFLAGS := -Wall --emrun
+LDFLAGS := -Wl,-lglfw
 BUILD_DIR := build
 ASSET_DIR := assets
 SRC_DIR := src
