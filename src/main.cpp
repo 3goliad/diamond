@@ -20,7 +20,8 @@ int main() {
 
   glfwSetErrorCallback(error_callback);
 
-  GLFWwindow *window = glfwCreateWindow(640, 480, "My Title", NULL, NULL);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+  GLFWwindow *window = glfwCreateWindow(640, 480, "diamond", NULL, NULL);
   if (window == NULL) {
     std::cerr << "Window creation failed!" << std::endl;
     return 1;
@@ -29,20 +30,24 @@ int main() {
   glfwSetKeyCallback(window, key_callback);
 
   glfwMakeContextCurrent(window);
+  gladLoadGLES2Loader((GLADloadproc) glfwGetProcAddress);
 
+  int w = 0;
+  int h = 0;
+  glfwGetFramebufferSize(window, &w, &h);
+  glViewport(0, 0, w, h);
 
-  //double time = glfwGetTime();
+  double time = glfwGetTime();
 
   glfwSwapInterval(1);
 
-  while (glfwWindowShouldClose(window) == GLFW_TRUE) {
-    int width;
-    int height;
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
+  while (glfwWindowShouldClose(window) == GLFW_FALSE) {
+    glfwPollEvents();
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
   std::clog << "Success!" << std::endl;
