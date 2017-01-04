@@ -1,6 +1,0 @@
-[submodule "libs/glfw"]
-	path = libs/glfw
-	url = https://github.com/glfw/glfw
-[submodule "libs/regal"]
-	path = libs/regal
-	url = https://github.com/p3/regal
