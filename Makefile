@@ -1,43 +1,54 @@
-CC := clang++
-EMCC := em++
-CFLAGS := -c -Wall -std=c++14
-EMCCFLAGS := -Wall -std=c++14 --emrun
-LDFLAGS := -Wl,-lglut -Wl,-lGLEW -Wl,-lGL
-EMLDFLAGS := --emrun
+SRC_DIR := src
 BUILD_DIR := build
 ASSET_DIR := assets
-SRC_DIR := src
+SHADER_DIR := shaders
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
+
+CC := clang++
+CFLAGS := -c -Wall -std=c++14
+LDFLAGS := -Wl,-lGL -Wl,-lGLEW -Wl,-lglfw
 OBJECTS := $(addprefix $(BUILD_DIR)/,$(SOURCES:$(SRC_DIR)/%.cpp=%.o))
-BC_OBJECTS := $(OBJECTS:%.o=%.bc)
+
 EXECUTABLE := $(BUILD_DIR)/diamond
-JS_EXECUTABLE := $(EXECUTABLE).js
+
+EMCC := em++
+EMCCFLAGS := -c -Wall -std=c++14
+EMLDFLAGS := -s USE_GLFW=3
+EMRUNFLAGS := --emrun --preload-file $(ASSET_DIR)
+BC_OBJECTS := $(OBJECTS:%.o=%.bc)
+
+DATADIRS := $(ASSET_DIR) $(SHADER_DIR)
+EMDATAFLAGS := $(addprefix --preload-file ,$(DATADIRS))
+
 HTML_PAGE := $(EXECUTABLE).html
+EMRUN_FILES:= $(EXECUTABLE).js $(HTML_PAGE) $(EXECUTABLE).data
 
-all: $(EXECUTABLE) $(JS_EXECUTABLE)
+all: $(EXECUTABLE) webexec
 
-$(JS_EXECUTABLE): $(HTML_PAGE)
-	@
-
-$(HTML_PAGE): $(BC_OBJECTS)
-	$(EMCC) $(BC_OBJECTS) $(EMLDFLAGS) -o $@ 
-
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+.PHONY: webexec
+webexec: $(BC_OBJECTS) $(DATADIRS)
+	$(EMCC) $(EMLDFLAGS) $(EMRUNFLAGS) $(EMDATAFLAGS) $(BC_OBJECTS) -o $(HTML_PAGE)
 
 $(BC_OBJECTS): $(BUILD_DIR)/%.bc: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(EMCC) $(EMCCFLAGS) $< -o $@
 
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
 $(OBJECTS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	echo $<
-	echo $@
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
+$(ASSET_DIR):
+	@
+
+$(SHADER_DIR):
+	@
+
 clean:
-	rm $(OBJECTS) $(EXECUTABLE) $(BC_OBJECTS) $(JS_EXECUTABLE) $(HTML_PAGE)
+	rm $(OBJECTS) $(EXECUTABLE) $(BC_OBJECTS) $(EMRUN_FILES)
 
 run: $(EXECUTABLE)
 	$(EXECUTABLE)
