@@ -6,7 +6,7 @@
 GLuint shaderProgram;
 
 void init_engine() {
-  shaderProgram = load_program("shaders/vs.glsl", "shaders/fs.glsl");
+  shaderProgram = load_program();
 
 }
 
