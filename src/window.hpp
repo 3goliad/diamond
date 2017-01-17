@@ -1,8 +1,16 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#pragma once
 
-void init_window(int w, int h);
-void drawloop(void(*draw)(void));
-void close_window();
+#include <GLFW/glfw3.h>
 
-#endif
+namespace window {
+  // handle to glfw
+  GLFWwindow* handle;
+  // create window and opengl context
+  void create(int w, int h);
+  // free window resources after the window is closed
+  void destroy();
+  // collect and process input
+  void update();
+  // swap screen buffer
+  void swap();
+}

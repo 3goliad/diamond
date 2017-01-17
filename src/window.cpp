@@ -1,69 +1,74 @@
-#include <iostream>
 #include <cstdlib>
+#include <cstdio>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "window.hpp"
+#include "input.hpp"
 
-GLFWwindow* window;
+namespace window {
 
-void error_callback(int error, const char* description)
-{
-  std::cerr << "GLFW Error: " << description << std::endl;
+GLFWwindow *handle;
+
+using namespace input;
+
+void error_callback(int error, const char *description) {
+  printf("glfw error: %s\n", description);
 }
 
-void resize_callback(GLFWwindow* win, int w, int h) {
+void resize_callback(GLFWwindow *win, int w, int h) {
   glViewport(0, 0, w, h);
 }
 
-void init_window(int w, int h) {
-  glfwSetErrorCallback(error_callback);
+void create(int w, int h) {
+    glfwSetErrorCallback(error_callback);
 
-  if(glfwInit() == 0) {
-    std::cerr << "GLFW init failed" << std::endl;
-    exit(EXIT_FAILURE);
-  }
+    if (glfwInit() == 0) {
+      printf("GLFW window init failed\n");
+      exit(EXIT_FAILURE);
+    }
 
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  window = glfwCreateWindow(w, h, "diamond", NULL, NULL);
-  if(window == nullptr) {
-    std::cerr << "GLFW window creation failed" << std::endl;
-    glfwTerminate();
-    exit(EXIT_FAILURE);
-  }
+    handle = glfwCreateWindow(w, h, "diamond", NULL, NULL);
+    if (handle == nullptr) {
+      printf("GLFW window creation failed\n");
+      glfwTerminate();
+      exit(EXIT_FAILURE);
+    }
+    glfwMakeContextCurrent(handle);
 
-  glfwSetFramebufferSizeCallback(window, resize_callback);
+    glfwSetFramebufferSizeCallback(handle, resize_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
-  glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-  glewInit();
+    glewInit();
 
-  int width, height;
-  glfwGetFramebufferSize(window, &width, &height);
-  glViewport(0, 0, width, height);
+    int width, height;
+    glfwGetFramebufferSize(handle, &width, &height);
+    glViewport(0, 0, width, height);
 
-  glfwSwapInterval(1);
+    glfwSwapInterval(1);
 
-  // get version info
-  const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-  const GLubyte* version = glGetString(GL_VERSION); // version as a string
-  std::clog << "Renderer: " << renderer << std::endl;
-  std::clog << "OpenGL version: " << version << std::endl;
+    // get version info
+    const GLubyte *renderer = glGetString(GL_RENDERER); // get renderer string
+    const GLubyte *version = glGetString(GL_VERSION);   // version as a string
+    printf("renderer: %s\n", renderer);
+    printf("opengl version: %s\n", version);
 }
 
-void drawloop(void(*draw)(void)) {
-  while(glfwWindowShouldClose(window) == 0) {
-    draw();
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-  }
+void swap() {
+  glfwSwapBuffers(handle);
 }
 
-void close_window() {
-  glfwDestroyWindow(window);
+void destroy() {
+  glfwDestroyWindow(handle);
   glfwTerminate();
+}
+
 }

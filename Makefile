@@ -4,16 +4,16 @@ ASSET_DIR := assets
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 
 CC := clang++
-CFLAGS := -c -Wall -std=c++14
+CFLAGS := -c -g -Wall -std=c++14
 LDFLAGS := -Wl,-lGL -Wl,-lGLEW -Wl,-lglfw
 OBJECTS := $(addprefix $(BUILD_DIR)/,$(SOURCES:$(SRC_DIR)/%.cpp=%.o))
 
 EXECUTABLE := $(BUILD_DIR)/diamond
 
 EMCC := em++
-EMCCFLAGS := -c -Wall -std=c++14
+EMCCFLAGS := -c -g -Wall -std=c++14
 EMLDFLAGS := -s USE_GLFW=3
-EMRUNFLAGS := --emrun --preload-file $(ASSET_DIR)
+EMRUNFLAGS := --emrun --preload-file $(ASSET_DIR)/favicon.ico
 BC_OBJECTS := $(OBJECTS:%.o=%.bc)
 
 HTML_PAGE := $(EXECUTABLE).html
