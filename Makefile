@@ -1,12 +1,12 @@
 SRC_DIR := src
 BUILD_DIR := build
 ASSET_DIR := assets
-SOURCES := $(wildcard $(SRC_DIR)/*.c)
+SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 
 CC := clang++
 CFLAGS := -c -g -Wall -std=c++14
 LDFLAGS := -Wl,-lGL -Wl,-lGLEW -Wl,-lglfw
-OBJECTS := $(addprefix $(BUILD_DIR)/,$(SOURCES:$(SRC_DIR)/%.c=%.o))
+OBJECTS := $(addprefix $(BUILD_DIR)/,$(SOURCES:$(SRC_DIR)/%.cpp=%.o))
 
 EXECUTABLE := $(BUILD_DIR)/diamond
 
@@ -25,13 +25,13 @@ all: $(EXECUTABLE) webexec
 webexec: $(BC_OBJECTS) $(DATADIRS)
 	$(EMCC) $(EMLDFLAGS) $(EMRUNFLAGS) $(BC_OBJECTS) -o $(HTML_PAGE)
 
-$(BC_OBJECTS): $(BUILD_DIR)/%.bc: $(SRC_DIR)/%.c | $(BUILD_DIR)
+$(BC_OBJECTS): $(BUILD_DIR)/%.bc: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(EMCC) $(EMCCFLAGS) $< -o $@
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
-$(OBJECTS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+$(OBJECTS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR):

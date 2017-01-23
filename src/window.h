@@ -20,7 +20,7 @@ GLFWwindow *window_create(int w, int h) {
     exit(EXIT_FAILURE);
   }
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   handle = glfwCreateWindow(w, h, "diamond", NULL, NULL);
   if (handle == nullptr) {
