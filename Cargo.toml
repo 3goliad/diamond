@@ -1,0 +1,12 @@
+[package]
+name = "diamond"
+version = "0.1.0"
+authors = ["Javier Maldonado <3goliad@gmail.com>"]
+
+[dependencies]
+gfx = "0.12"
+gfx_app = "0.3"
+genmesh = "*"
+cgmath = "*"
+noise = "*"
+rand = "*"
