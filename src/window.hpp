@@ -10,7 +10,9 @@ void error_callback(int error, const char *description) {
   printf("glfw error: %s\n", description);
 }
 
-void resize_callback(GLFWwindow *win, int w, int h) { glViewport(0, 0, w, h); }
+void resize_callback(GLFWwindow *win, int w, int h) {
+    glViewport(0, 0, w, h);
+}
 
 GLFWwindow *window_create(int w, int h) {
   GLFWwindow *handle;
@@ -30,13 +32,12 @@ GLFWwindow *window_create(int w, int h) {
   }
   glfwMakeContextCurrent(handle);
   glfwSetFramebufferSizeCallback(handle, resize_callback);
-  return handle;
-}
 
-void opengl_init(GLFWwindow* handle) {
   glewInit();
   int width, height;
   glfwGetFramebufferSize(handle, &width, &height);
   glViewport(0, 0, width, height);
   glfwSwapInterval(1);
+
+  return handle;
 }
