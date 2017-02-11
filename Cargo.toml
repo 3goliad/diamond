@@ -1,12 +1,16 @@
 [package]
 name = "diamond"
 version = "0.1.0"
-authors = ["Javier Maldonado <3goliad@gmail.com>"]
+authors = ["Javier Maldonado <3goliad@gmail.com>", "Zak Ziebell"]
 
 [dependencies]
-gfx = "0.12"
-gfx_app = "0.3"
-genmesh = "*"
-cgmath = "*"
-noise = "*"
+log = "*"               
+env_logger = "*"         
+glutin = "*"             
+gfx = "*"                
+gfx_device_gl = "*"      
+gfx_window_glutin = "*" 
+nalgebra = "*"
 rand = "*"
+genmesh = "*"        
+noise = "*"             
