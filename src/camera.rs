@@ -1,4 +1,4 @@
-use nalgebra::{PerspectiveMatrix3, Matrix4, Isometry3, Vector3, Point3, Origin, ToHomogeneous, Eye};
+use na::{PerspectiveMatrix3, Matrix4, Isometry3, Vector3, Point3, Origin, ToHomogeneous, Eye};
 
 pub struct Camera {
     pos: Point3<f32>,

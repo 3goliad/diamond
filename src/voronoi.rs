@@ -1,141 +1,199 @@
-use rand::Rng;
-use rand::distributions::Range;
+use std::cmp::Ordering;
+
 use na::Point2;
+use ncollide::utils::circumcircle;
 
-/// A bounding box centered at the origin
-#[derive(Clone, Copy)]
-struct Bounds(usize, usize);
+type Point = Point2<f32>;
 
-/// Any closed figure on a plane that contains points
-trait PlaneFigure {
-    fn contains_point(p: &Point2) -> bool;
-    // must return a box large enough to contain the entire shape
-    fn bounds() -> Bounds;
+type Event = Option<Point>;
+
+struct Arc {
+    p: Point,
+    event: Event,
+    l_edge: Option<EdgeHandle>,
+    r_edge: Option<EdgeHandle>,
 }
 
-/// An annulus with an origin at (0,0)
-#[derive(Clone, Copy)]
-pub struct Annulus {
-    inner_radius: usize,
-    outer_radius: usize,
-}
-
-impl Annulus {
-    /// Create a new annulus
-    pub fn new(inner_radius: usize, outer_radius: usize) -> Annulus {
-        Annulus {
-            inner_radius: inner_radius,
-            outer_radius: outer_radius,
+impl Arc {
+    fn new(p: Point) -> Arc {
+        Arc {
+            p: p,
+            event: None,
+            l_edge: None,
+            r_edge: None,
         }
     }
 }
 
-impl PlaneFigure for Annulus {
-    /// Test if a given point lies inside this annulus
-    fn contains_point(&self, p: &Point2) -> bool {
-        ((self.inner_radius as f32) < p.coords.norm()) <= self.outer_radius as f32
+struct Beachline {
+    l: Vec<Arc>,
+    r: Vec<Arc>,
+}
+
+impl Beachline {
+    fn new(p: Point) -> Beachline {
+        Beachline {
+            l: Vec::new(),
+            r: Vec::new(),
+        }
     }
 
-    /// Return a box large enough to contain this annulus
-    fn bounds(&self) -> Bounds {
-        Bounds(self.outer_radius * 2, self.outer_radius * 2)
+    fn insert(&mut self, p: Point) {
+        (if self.l.len() <= self.r.len() {
+                self.l
+            } else {
+                self.r
+            })
+            .push(Arc::new())
+    }
+
+
+    fn join_at(&mut self, p: Point) -> Option<Event> {
+        let new_root = self.l.pop();
+        let new_edge = graph.start_edge(p);
+        if let Some(a) = self.l.last_mut() {
+            a.r_edge = new_edge;
+        }
+        if let Some(a) = self.r.last_mut() {
+            a.l_edge = new_edge;
+        }
+        graph.finish_edge(self.current.l_edge, p);
+        graph.finish_edge(self.current.r_edge, p);
+        (Some(check_circle_event(self.left.last(), p.x)),
+         Some(check_circle_event(self.right.last(), p.x)))
+    }
+
+    fn has_event(&self, p: &Point) -> bool {
+        if let Some(a) = self.l.iter.find(|a| a.p == p) {
+            a.event.is_some()
+        } else if let Some(a) = self.r.iter.find(|a| a.p == p) {
+            a.event.is_some()
+        }
     }
 }
 
-struct Polygon {
-    center: Point2,
-    halfedge: HalfedgeID,
+struct VoronoiGraph {
+    output: EdgeList,
+    bline: Beachline,
 }
 
-struct Vertex {
-    location: Point2,
-    halfedge: HalfedgeID,
-}
+impl VoronoiGraph {
+    pub fn new(sites: Vec<Point>) -> VoronoiGraph {
+        let events = BinaryHeap::from(sites);
+        let graph = EdgeList::new();
+        let bline = Beachline::new();
+        bline.insert(events.pop());
 
-struct HalfEdge {
-    target: VertexID,
-    face: PolygonID,
-    next: HalfedgeID,
-    prev: HalfedgeID,
-}
+        'main: while let Some(event) = events.pop() {
+            if bline.has_event(&event) {
+                bline.join_at(&event);
+            } else {
+                // find if any arcs have the same height as our point
+                while let Some(arc) = beachline.next {
+                    if let Some(intersection) = intersection(site, arc) {
+                        // new parabola intersects arc i.
+                        // if neccesary, duplicate i
+                        if arc.next.is_some() & !intersection(site, arc.next) {
+                            arc.next.prev = Arc::new(arc.point, arc, arc.next);
+                            arc.next = arc.next.prev;
+                        } else {
+                            arc.next = Arc::new(arc.point, arc);
+                        }
+                        arc.next.one = arc.one;
 
-type PolygonID = usize;
-type VertexID = usize;
-type HalfEdgeID = usize;
+                        // add the site between arc and arc.next
+                        arc.next.prev = Arc::new(site, arc, arc.next);
+                        arc.next = arc.next.prev;
 
-struct VoronoiGraph<S: PlaneFigure> {
-    shape: S,
-    bounds: Bounds,
-    vertices: Vec<Vertex>,
-    edges: Vec<Halfedge>,
-    faces: Vec<Polygon>,
-}
+                        arc = arc.next; // now arc points to the new arc
 
+                        // add new half edges at arc's endpoints
+                        arc.prev.right_endpoint = arc.left_endpoint =
+                                                      Segment::PartialSeg(intersection);
+                        arc.next.left_endpoint = arc.right_endpoint =
+                                                     Segment::PartialSeg(intersection);
+                        check_circle_event(arc, site.x);
+                        check_circle_event(arc.prev, site.x);
+                        check_circle_event(arc.next, site.x);
 
-
-impl<S: PlaneFigure> VoronoiGraph<S> {
-    pub fn new<R: Rng>(shape: S, rng: R) -> VoronoiGraph {
-        struct Site {
-            y: f32,
-            x: f32,
-            is_boundary: bool,
-        }
-        let seen_sites: Vec<Site> = Vec::new();
-        // a priority queue of points in the bounding plane, ordered lexicographically, that is,
-        // for a point p{x, y}, p1 < p2 if p1.y <= p2.y, p1.x < p2.x
-        // points are stored as indices into the sites vector
-        let sites_queue: VecDeque<usize> = VecDeque::new();
-        let bounds = shape.bounds();
-        let Bounds(xdim, ydim) = bounds;
-        let (x_range, y_range) = (Range::new((xdim as f32 / 2), (xdim as f32 / 2) * -1.0),
-                                  Range::new((ydim as f32 / 2), (ydim as f32 / 2) * -1.0));
-        for n in 0..99 {
-            seen_sites[n] = Site {
-                y: y_range.sample(),
-                x: x_range.sample(),
-                is_boundary: false,
-            };
-            sites_queue.push_back(n);
-        }
-        sites.sort_by(|a, b| (a.y <= b.y) & (a.x < b.x));
-        enum Poly {
-            Face(usize),
-            Boundary(usize, usize),
-        }
-        // an ordered sequence of Poly components of the form Face, Boundary, Face, Boundary, Face
-        let polys: Vec<Poly> = Vec::new();
-        let p = sites_queue.pop_front();
-        polys.push(Poly::Face(p));
-        while !points.is_empty() {
-            let p = sites_queue.pop_front();
-            match seen_sites[p].is_boundary { 
-                false => {
-                    // find a face in polys containing p
-                    // find the parabola that divides the origin of the face from p
-                    // add the two new regions to the list
-                    // add the left and right parabola components to the list as boundaries
-                    // check if the left parabola intersects with a neighbor, add the intersection
-                    // to the seen sites list and queue
-                    // perform the same check for the right parabola
+                        continue 'main;
+                    }
                 }
-                true => {
-                    // p intersects boundaries (q, r) and (r, s)
-                    // create a new boundary (q, s)
-                    // replace the sequence Boundary(q, r), Face(r), Boundary(r, s) in polys with
-                    // the new Boundary(q, s)
-                    // delete any intersections with (q, r) and (r, s) from the sites_queue
-                    // add any new intersections to the sites list and queue
-                    // p is now a vertex which is the endpoint of Boundaries (q,r), (r, s), (q, s)
-                }
+
+                // if the site does not have any intersections add it to the list
+                arc.last.next = Arc::new(site, arc.last);
+                // insert a new half edge between the last arc and our site
+                arc.last.right_endpoint =
+                    arc.last.next.left_endpoint =
+                        Segment::PartialSeg(Point::new(MAX_X, (arc.last.y + arc.last.next.y) / 2));
             }
-            // all remaining regions are voronoi cell, all remaining boundaries are edges
+        }
+        while let Some(e) = events.pop() {
+            //process_event();
+        }
+        //clean up extra edges
+    }
+
+    fn check_circle_event(arc: Arc, x: f32) {
+        if arc.event.is_some() & arc.event.x != x {
+            arc.event.valid = false;
+        }
+        arc.event = None;
+
+        if arc.prev.is_none() | arc.next.is_none() {
+            return;
         }
 
-        VoronoiGraph {
-            shape: shape,
-            vertices: vertices,
-            edges: edges,
-            faces: faces,
+        if let (Some(new_x), Some(p)) = circumcircle(arc.prev.point, arc.point, arc.next.point) {
+            arc.event = Event::new(x, p, arc);
+            events.push(arc.event);
         }
+    }
+
+    fn intersects(p: Point, arc: Arc) -> Option<Point> {
+        if arc.point.x == p.x {
+            return None;
+        }
+
+        if let Some(prev) = arc.prev {
+            let a = intersection(prev.point, arc.point, p.x).y;
+        }
+        if let Some(next) = a.next {
+            let b = intersection(arc.point, next.point, p.x).y;
+        }
+        if (a.prev.is_none() || a <= p.y) && (arc.next.is_none() || b <= p.y) {
+            Some(Point::new((arc.point.x.pow(2) + arc.point.y.pow(2) - p.x.pow(2)) / 2 *
+                            (arc.point.x - p.x)))
+        } else {
+            None
+        }
+    }
+
+    fn intersection(pa: Point, pb: Point, sweepline: f32) -> Point {
+        let mut result = Point::new();
+        let p = pa;
+
+        if (pa.x == pb.x) {
+            result.y = (pa.y + pb.y) / 2;
+        } else if (pb.x == l) {
+            result.y = pb.y;
+        } else if (pa.x == l) {
+            res.y = pa.y;
+            let p = pb;
+        } else {
+            // Use the quadratic formula.
+            let z0 = 2 * (pa.x - l);
+            let z1 = 2 * (pb.x - l);
+
+            let a = z0.recip() - z1.recip();
+            let b = -2 * (pa.y / z0 - pb.y / z1);
+            let c = (pa.y.powi(2) + pa.x.powi(2) - l.powi(2)) / z0 -
+                    (pb.y.powi(2) + pb.x.powi(2) - l.powi(2)) / z1;
+
+            result.y = (-b - sqrt(b.powi(2) - 4 * a * c)) / (2 * a);
+        }
+        // Plug back into one of the parabola equations.
+        result.x = (p.x.powi(2) + (p.y - result.y).powi(2) - l.powi(2)) / (2 * p.x - 2 * l);
+        return res;
     }
 }
