@@ -1,13 +1,20 @@
-use noise::Seed;
 use rand::{self, Rng};
+
 use genmesh::{Triangulate, Vertices};
 use genmesh::generators::{Plane, SharedVertex, IndexedPolygon};
-use super::Vertex;
+
+use noise::Seed;
 use noise::perlin2;
+
+use ncollide::TriMesh3;
+
+use super::Vertex;
+
+use annulus::Annulus;
 
 pub struct Engine {
     seed: Seed,
-    plane: Plane,
+    ring: Annulus,
 }
 
 impl Engine {
@@ -16,38 +23,58 @@ impl Engine {
 
         Engine {
             seed: Seed::new(rand_seed),
-            plane: Plane::subdivide(256, 256),
+            ring: Annulus::new(),
         }
     }
 
     pub fn to_vertex(&self) -> (Vec<Vertex>, Vec<u32>) {
-        (self.plane
-             .shared_vertex_iter()
-             .map(|(x, y)| {
-                let h = perlin2(&self.seed, &[x, y]) * 32.0;
-                Vertex {
-                    pos: [25.0 * x, 25.0 * y, h],
-                    color: calculate_color(h),
-                }
-            })
-             .collect(),
-         self.plane
-             .indexed_polygon_iter()
-             .triangulate()
-             .vertices()
-             .map(|i| i as u32)
-             .collect())
+        let vertices = Vec::new();
+        let indices = Vec::new();
+        heights = HeightMap::new(&self.seed);
+        for (coords, center) in self.ring.cells() {
+            let h = heights.height(coords);
+            vertices.push(Vertex {
+                pos: [xy.x, xy.y, h],
+                color: [h, h, h],
+            });
+            let center_index: u32 = vertices.len() - 1;
+            let corner_indices = [u32; 6];
+            for n in 0..6 {
+                let angle: f32 = 60.0 * n as f32   + 30.0;
+                let angle = angle.to_radians();
+                vertices.push(Vertex {
+                    pos: [xy.x + self.ring.cell_size * angle_rad.cos(), xy.y + self.ring.cell_size * angle_rad.cos(), 0.0],
+                    color: [h, h, h]
+                });
+                corner_indices[n] = vertices.len() - 1;
+            }
+            for n in 0..5 {
+                indices.push(center_index);
+                indices.push(corner_indices[n]);
+                indices.push(corner_indices[n + 1]);
+            }
+            indices.push(center_index);
+            indices.push(corner_indices[5]);
+            indices.push(corner_indices[0]);
+        }
+        (vertices, indices)
     }
+
 }
 
-fn calculate_color(height: f32) -> [f32; 3] {
-    if height > 8.0 {
-        [0.9, 0.9, 0.9] // white
-    } else if height > 0.0 {
-        [0.7, 0.7, 0.7] // greay
-    } else if height > -5.0 {
-        [0.2, 0.7, 0.2] // green
-    } else {
-        [0.2, 0.2, 0.7] // blue
+struct HeightMap {
+    rng: Perlin,
+}
+
+impl HeightMap {
+    fn new(s: &Seed) -> HeightMap {
+        let perlin = Perlin::new().set_seed(s);
+        HeightMap {
+            rng: Perlin::new().set_seed(s),
+        }
+    }
+
+    fn height(&self, HexCoord) -> f32 {
+        self.rng.get(HexCoord)
     }
 }
