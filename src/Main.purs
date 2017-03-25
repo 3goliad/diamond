@@ -1,11 +1,36 @@
 module Main where
 
 import Prelude
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, log, logShow)
-import GLMatrix (toRadians)
+import Data.Array (replicate)
+-- import Control.Monad.Eff.Random (random)
 
-main :: forall e. Eff (console :: CONSOLE | e) Unit
-main = do
-  log "Hello soldier!"
-  logShow (toRadians 360.0)
+
+type Point = { x :: Number, y :: Number, z :: Number}
+type Corner = { height :: Number }
+type Edge = { start :: Point, end :: Point, heights :: Array Number }
+type Tile = { center :: Point, heights :: Array (Array Number) }
+data Chunk = Chunk { size :: Int
+             , tiles :: Array (Array Tile)
+             , corners :: Array (Array Corner)
+             , edges :: Array (Array Edge) }
+
+point :: Number -> Number -> Number -> Point
+point x y z = {x, y, z}
+
+generateTile :: Int -> Tile
+generateTile size =
+  { center: point 0.0 0.0 0.0
+  , heights: replicate size (replicate size 0.0)
+}
+
+generateEdge :: Int -> Edge
+generateEdge size =
+  { start: point 0.0 0.0 0.0
+  , heights: replicate (size - 2) 0.0
+  , end: point 0.0 0.0 0.0
+}
+
+{-- generate :: Int -> Eff (random :: RANDOM) Chunk --}
+{-- generate size = Chunk { size, tiles, corners, edges } --}
+  {-- where --}
+  {--   tiles = unfoldr (\size -> --} 
