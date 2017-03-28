@@ -1,7 +1,7 @@
 'use strict';
 
 var g ={
-  SCALE: 5.0,
+  SCALE: 1.0,
   SIZE: 3.0,
 };
 
@@ -22,7 +22,7 @@ class Tile {
       let col = new Array(size);
       for(let j = 0; j < size; j++) {
         let p = new Point(corner_x + i, 0.0, corner_y + j);
-        //p.v[1] = g.SCALE * noise.simplex2(p.v[0], p.v[2]);
+        p.v[1] = g.SCALE * noise.simplex2(p.v[0], p.v[2]);
         col[j] = p;
       }
       hmap[i] = col;
@@ -50,14 +50,16 @@ class Terrain {
     let indices = new Array();
     let normals = new Array();
     let size = this.size;
+    let tiles = this.tiles;
     let tileSize = Math.pow(this.size, 2);
     let tileRowSize = Math.pow(this.size, 3);
     let index = 0;
     //vertices
-    for(let col of this.tiles) {
-      for(let tile of col) {
-        for(let c of tile.hmap) {
-          for(let p of c) {
+    for(let i = 0; i < size; i++) {
+      for(let j = 0; j < size; j++) {
+        for(let k = 0; k < size; k++) {
+          for(let l = 0; l < size; l++) {
+            let p = tiles[i][j].hmap[k][l];
             vertices.push(p.v[0]);
             vertices.push(p.v[1]);
             vertices.push(p.v[2]);
@@ -69,9 +71,9 @@ class Terrain {
     //tile-internal tris
     for(let i = 0; i < size; i++) {
       for(let j = 0; j < size; j++) {
-        let tile = this.tiles[i][j].hmap;
         for(let k = 0; k < size - 1; k++) {
           for(let l = 0; l < size - 1; l++) {
+            let tile = this.tiles[i][j].hmap;
             let p1 = tile[k + 0][l + 0];
             let p2 = tile[k + 0][l + 1];
             let p3 = tile[k + 1][l + 0];
@@ -88,11 +90,9 @@ class Terrain {
         }
       }
     }
-    //complete corner tiles
-    for(let i = 0; i < size - 1; i++) {
+    //bottoms
+    for(let i = 0; i < size; i++) {
       for(let j = 0; j < size - 1; j++) {
-        let tiles = this.tiles;
-        //bottom extras
         for(let k = 0; k < size - 1; k++) {
           let p1 = tiles[i][j + 0].hmap[k + 0][size - 1];
           let p2 = tiles[i][j + 1].hmap[k + 0][0];
@@ -107,22 +107,42 @@ class Terrain {
           indices.push(p5.i);
           indices.push(p6.i);
         }
-        //side extras
-        for(let k = 0; k < this. size - 1; k++) {
-          indices.push(tiles[i][j + 0].hmap[size - 1][k + 0].i);
-          indices.push(tiles[i][j + 0].hmap[size - 1][k + 1].i);
-          indices.push(tiles[i][j + 1].hmap[0][k + 0].i);
-          indices.push(tiles[i][j + 0].hmap[size - 1][k + 1].i);
-          indices.push(tiles[i][j + 1].hmap[0][k + 1].i);
-          indices.push(tiles[i][j + 1].hmap[0][k + 0].i);
+      }
+    }
+    //sides
+    for(let i = 0; i < size - 1; i++) {
+      for(let j = 0; j < size; j++) {
+        for(let k = 0; k < size - 1; k++) {
+          let p1 = tiles[i][j].hmap[size - 1][k];
+          let p2 = tiles[i][j].hmap[size - 1][k + 1];
+          let p3 = tiles[i + 1][j].hmap[0][k];
+          indices.push(p1.i);
+          indices.push(p2.i);
+          indices.push(p3.i);
+          let p4 = tiles[i][j].hmap[size - 1][k + 1];
+          let p5 = tiles[i + 1][j].hmap[0][k + 1];
+          let p6 = tiles[i + 1][j].hmap[0][k];
+          indices.push(p4.i);
+          indices.push(p5.i);
+          indices.push(p6.i);
         }
-        //far corner
-        indices.push(tiles[i + 0][j + 0].hmap[size - 1][size - 1].i);
-        indices.push(tiles[i + 0][j + 1].hmap[size - 1][0].i);
-        indices.push(tiles[i + 1][j + 0].hmap[0][size - 1].i);
-        indices.push(tiles[i + 0][j + 1].hmap[size - 1][0].i);
-        indices.push(tiles[i + 1][j + 1].hmap[0][0].i);
-        indices.push(tiles[i + 1][j + 0].hmap[0][size - 1].i);
+      }
+    }
+    //far corner
+    for(let i = 0; i < size - 1; i++) {
+      for(let j = 0; j < size - 1; j++) {
+        let p1 = tiles[i + 0][j + 0].hmap[size - 1][size - 1];
+        let p2 = tiles[i + 0][j + 1].hmap[size - 1][0];
+        let p3 = tiles[i + 1][j + 0].hmap[0][size - 1];
+        indices.push(p1.i);
+        indices.push(p2.i);
+        indices.push(p3.i);
+        let p4 = tiles[i + 0][j + 1].hmap[size - 1][0];
+        let p5 = tiles[i + 1][j + 1].hmap[0][0];
+        let p6 = tiles[i + 1][j + 0].hmap[0][size - 1];
+        indices.push(p4.i);
+        indices.push(p5.i);
+        indices.push(p6.i);
       }
     }
     return {position: {numComponents: 3, data: vertices}, indices: {numComponents: 3, data: indices}};
@@ -186,7 +206,6 @@ function main() {
     }
     requestAnimationFrame(draw);
   }
-
   requestAnimationFrame(draw);
 }
 
