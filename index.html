@@ -17,7 +17,7 @@ body, html {
     </style>
     <script src="perlin.js" type="text/javascript"></script>
     <script src="twgl-full.js" type="text/javascript"></script>
-    <script id="vshader" type="notjs">
+    <script id="vs" type="notjs">
       uniform mat4 u_model;
       uniform mat4 u_view;
       uniform mat4 u_persp;
@@ -27,7 +27,7 @@ body, html {
         gl_Position = u_persp * u_view * u_model * vec4(a_position, 1.0);
       }
     </script>
-    <script id="fshader" type="notjs">
+    <script id="fs" type="notjs">
       precision mediump float;
       void main()
       {
