@@ -7,14 +7,17 @@ use std::fs::File;
 use std::io::Read;
 
 use glium::Surface;
-use glium::glutin;
+use glium::glutin::{self, GlRequest, Api};
 use glium::index::PrimitiveType;
 
 fn main() {
     use glium::DisplayBuild;
 
     // building the display, ie. the main object
-    let display = glutin::WindowBuilder::new().build_glium().unwrap();
+    let display = glutin::WindowBuilder::new()
+        .with_gl(GlRequest::Specific(Api::OpenGl, (4, 1)))
+        .build_glium()
+        .unwrap();
 
     // building the vertex buffer, which contains all the vertices that we will draw
     let vertex_buffer = {
@@ -45,7 +48,7 @@ fn main() {
     let program = program!(&display,
         410 => {
             vertex: "
-                #version 410
+                #version 410 core
 
                 in vec2 position;
 
@@ -59,11 +62,13 @@ fn main() {
     )
             .unwrap();
 
+    let (res_x, res_y) = display.get_framebuffer_dimensions();
+
     // the main loop
     start_loop(|| {
         // building the uniforms
         let uniforms = uniform! {
-            iResolution: [1600, 1600, 1,],
+            u_resolution: [res_x, res_y],
         };
 
         // drawing a frame
