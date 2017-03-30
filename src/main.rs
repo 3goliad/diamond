@@ -3,8 +3,6 @@ extern crate glium;
 
 use std::time::{Instant, Duration};
 use std::thread;
-use std::fs::File;
-use std::io::Read;
 
 use glium::Surface;
 use glium::glutin::{self, GlRequest, Api};
@@ -42,9 +40,8 @@ fn main() {
         .unwrap();
 
     // compiling shaders and linking them together
-    let mut shader_source = File::open("diamond.frag").unwrap();
-    let mut fragment_shader = String::new();
-    shader_source.read_to_string(&mut fragment_shader).unwrap();
+    let shader_source = include_bytes!("diamond.frag");
+    let fragment_shader = std::str::from_utf8(shader_source).unwrap();
     let program = program!(&display,
         410 => {
             vertex: "
@@ -57,7 +54,7 @@ fn main() {
                 }
             ",
 
-            fragment: fragment_shader.as_str(),
+            fragment: fragment_shader,
         },
     )
             .unwrap();
