@@ -4,34 +4,76 @@ uniform vec2 u_resolution;
 out vec4 frag_color;
 
 void main() {
-	vec2 norm_point = gl_FragCoord/u_resolution;
-	vec3 cam_pos = vec3(0.0, 30.0, 0.0); //units in decameters
+  vec2 norm_point = gl_FragCoord/u_resolution;
+  vec3 cam_pos = vec3(0.0, 30.0, 0.0); //units in decameters
+  vec3 cam_dir = vec3(0.0, 10.0, 0.0);
+}
+
+//returns the height and the derivatives
+float terrain_shape(in float x, in float z) {
+  // should remain in the [-10,25] range
+  vec3 v = sdnoise(vec2(x, z)) * 17.5;
+  v+= 7.5;
+  return v;
 }
 
 float height(in float x, in float z) {
-	// should remain in the [-10,25] range
-	float h = snoise(vec2(x, z)) * 17.5;
-	h+= 7.5;
-	return h;
+  const vec3 v = terrain_shape(x, z);
+  return v[0];
 }
 
 bool march_ray(in vec3 cam_pos, in vec3 cam_dir, out float dist) {
-	const float march = 0.01;
-	const float min_m = 0.001;
-	const float max_m = 10.0;
-	for(float t = min_m; t < max_m; t+= march) {
-		const vec3 p = cam_pos + cam_dir*t;
-		if(p.y < height(p.x, p.z)) {
-			dist = t - (march * 0.5);
-			return true;
-		}
-		march = 0.01 * t;
-	}
-	return false;
+  const float march = 0.01;
+  const float min_m = 0.001;
+  const float max_m = 10.0;
+  for(float t = min_m; t < max_m; t+= march) {
+    const vec3 p = cam_pos + cam_dir*t;
+    if(p.y < height(p.x, p.z)) {
+      dist = t - (march * 0.5);
+      return true;
+    }
+    march = 0.01 * t;
+  }
+  return false;
 }
 
-vec3 terrain_color(
+vec3 terrain_color(in vec3 cam_pos, in vec3 cam_dir, in float dist) {
+  vec3 p = cam_pos + cam_dir * dist; //intersection point
+  vec3 n = derive_normal(p.xy);
+  vec3 s = shading_at(p, n);
+  vec3 m = terrain_at(p, n);
+  return apply_fog(m * s, dist);
+}
 
+vec3 sky_color() {
+  return vec3(0.2, 0.2, 0.8);
+}
+
+vec3 derive_normal(in vec2 p) {
+  const vec3 v = terrain_shape(p);
+  return normalize(vec3(v.y, -1, v.z));
+}
+
+vec3 shading_at(in vec3 intersection, in vec3 normal) {
+  const vec3 light_pos = vec3(0.0, 40.0, 10.0);
+  const vec3 light_color = vec3(1.0, 1.0, 1.0);
+  const float ambient_strength = 0.1;
+  const vec3 ambient = ambient_strength * light_color;
+  vec3 light_dir = normalize(light_pos - intersection);
+  float diff = max(dot(normal, light_dir), 0.0);
+  vec3 diffuse = diff * light_color;
+  return ambient + diffuse;
+}
+
+vec3 terrain_at(in vec3 intersection, in vec3 normal) {
+  return vec3(0.1, 0.1, 0.1);
+}
+
+vec3 apply_fog(in vec3 color, in float dist) {
+  float fog_amount = 1.0 - exp(-dist * color.z);
+  vec3 fog_color = vec3(0.5, 0.6, 0.7);
+  return mix(color, fog_color, fog_amount);
+}
 //
 // vec3  psrdnoise(vec2 pos, vec2 per, float rot)
 // vec3  psdnoise(vec2 pos, vec2 per)
@@ -123,13 +165,13 @@ float permute(float x) {
 // (The constant 0.0243902439 is 1/41)
 vec2 rgrad2(vec2 p, float rot) {
 #if 0
-// Map from a line to a diamond such that a shift maps to a rotation.
+  // Map from a line to a diamond such that a shift maps to a rotation.
   float u = permute(permute(p.x) + p.y) * 0.0243902439 + rot; // Rotate by shift
   u = 4.0 * fract(u) - 2.0;
   // (This vector could be normalized, exactly or approximately.)
   return vec2(abs(u)-1.0, abs(abs(u+1.0)-2.0)-1.0);
 #else
-// For more isotropic gradients, sin/cos can be used instead.
+  // For more isotropic gradients, sin/cos can be used instead.
   float u = permute(permute(p.x) + p.y) * 0.0243902439 + rot; // Rotate by shift
   u = fract(u) * 6.28318530718; // 2*pi
   return vec2(cos(u), sin(u));
@@ -196,17 +238,17 @@ vec3 psrdnoise(vec2 pos, vec2 per, float rot) {
   if (t.x < 0.0) {
     dtdx.x = 0.0;
     dtdy.x = 0.0;
-	t.x = 0.0;
+    t.x = 0.0;
   }
   if (t.y < 0.0) {
     dtdx.y = 0.0;
     dtdy.y = 0.0;
-	t.y = 0.0;
+    t.y = 0.0;
   }
   if (t.z < 0.0) {
     dtdx.z = 0.0;
     dtdy.z = 0.0;
-	t.z = 0.0;
+    t.z = 0.0;
   }
 
   // Fourth power of t (and third power for derivative)
@@ -377,17 +419,17 @@ vec3 srdnoise(vec2 pos, float rot) {
   if (t.x < 0.0) {
     dtdx.x = 0.0;
     dtdy.x = 0.0;
-	t.x = 0.0;
+    t.x = 0.0;
   }
   if (t.y < 0.0) {
     dtdx.y = 0.0;
     dtdy.y = 0.0;
-	t.y = 0.0;
+    t.y = 0.0;
   }
   if (t.z < 0.0) {
     dtdx.z = 0.0;
     dtdy.z = 0.0;
-	t.z = 0.0;
+    t.z = 0.0;
   }
 
   // Fourth power of t (and third power for derivative)
