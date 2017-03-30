@@ -4,9 +4,19 @@ uniform vec2 u_resolution;
 out vec4 frag_color;
 
 void main() {
-  vec2 norm_point = gl_FragCoord/u_resolution;
+  vec2 zeroed_coords = gl_FragCoord - 0.5;
+  float x = (zeroed_coords.x * 2) / u_resolution.x - 1;
+  float y = (zeroed_coords.y * 2) / u_resolution.y - 1;
+  vec2 normed_coords = vec2(x, y);
+  float r = sqrt(x*x + y*y);
+  if(r > 1 || x == 0) {
+    frag_color = vec4(1.0, 1.0, 1.0, 1.0);
+    return;
+  }
+  float theta = r * 45.0;
+  float phi = atan(y, x);
   vec3 cam_pos = vec3(0.0, 30.0, 0.0); //units in decameters
-  vec3 cam_dir = vec3(0.0, 10.0, 0.0);
+  vec3 cam_dir = vec3(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));
 }
 
 //returns the height and the derivatives
