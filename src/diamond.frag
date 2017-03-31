@@ -1,89 +1,9 @@
 #version 410 core
-
+//Uniforms from rust
 uniform vec2 u_resolution;
+uniform float u_frame;
 out vec4 frag_color;
 
-void main() {
-  vec2 zeroed_coords = gl_FragCoord - 0.5;
-  float x = (zeroed_coords.x * 2) / u_resolution.x - 1;
-  float y = (zeroed_coords.y * 2) / u_resolution.y - 1;
-  vec2 normed_coords = vec2(x, y);
-  float r = sqrt(x*x + y*y);
-  if(r > 1 || x == 0) {
-    frag_color = vec4(1.0, 1.0, 1.0, 1.0);
-    return;
-  }
-  float theta = r * 45.0;
-  float phi = atan(y, x);
-  vec3 cam_pos = vec3(0.0, 30.0, 0.0); //units in decameters
-  vec3 cam_dir = vec3(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));
-}
-
-//returns the height and the derivatives
-float terrain_shape(in float x, in float z) {
-  // should remain in the [-10,25] range
-  vec3 v = sdnoise(vec2(x, z)) * 17.5;
-  v+= 7.5;
-  return v;
-}
-
-float height(in float x, in float z) {
-  const vec3 v = terrain_shape(x, z);
-  return v[0];
-}
-
-bool march_ray(in vec3 cam_pos, in vec3 cam_dir, out float dist) {
-  const float march = 0.01;
-  const float min_m = 0.001;
-  const float max_m = 10.0;
-  for(float t = min_m; t < max_m; t+= march) {
-    const vec3 p = cam_pos + cam_dir*t;
-    if(p.y < height(p.x, p.z)) {
-      dist = t - (march * 0.5);
-      return true;
-    }
-    march = 0.01 * t;
-  }
-  return false;
-}
-
-vec3 terrain_color(in vec3 cam_pos, in vec3 cam_dir, in float dist) {
-  vec3 p = cam_pos + cam_dir * dist; //intersection point
-  vec3 n = derive_normal(p.xy);
-  vec3 s = shading_at(p, n);
-  vec3 m = terrain_at(p, n);
-  return apply_fog(m * s, dist);
-}
-
-vec3 sky_color() {
-  return vec3(0.2, 0.2, 0.8);
-}
-
-vec3 derive_normal(in vec2 p) {
-  const vec3 v = terrain_shape(p);
-  return normalize(vec3(v.y, -1, v.z));
-}
-
-vec3 shading_at(in vec3 intersection, in vec3 normal) {
-  const vec3 light_pos = vec3(0.0, 40.0, 10.0);
-  const vec3 light_color = vec3(1.0, 1.0, 1.0);
-  const float ambient_strength = 0.1;
-  const vec3 ambient = ambient_strength * light_color;
-  vec3 light_dir = normalize(light_pos - intersection);
-  float diff = max(dot(normal, light_dir), 0.0);
-  vec3 diffuse = diff * light_color;
-  return ambient + diffuse;
-}
-
-vec3 terrain_at(in vec3 intersection, in vec3 normal) {
-  return vec3(0.1, 0.1, 0.1);
-}
-
-vec3 apply_fog(in vec3 color, in float dist) {
-  float fog_amount = 1.0 - exp(-dist * color.z);
-  vec3 fog_color = vec3(0.5, 0.6, 0.7);
-  return mix(color, fog_color, fog_amount);
-}
 //
 // vec3  psrdnoise(vec2 pos, vec2 per, float rot)
 // vec3  psdnoise(vec2 pos, vec2 per)
@@ -553,4 +473,130 @@ float srnoise(vec2 pos, float rot) {
 //
 float snoise(vec2 pos) {
   return srnoise(pos, 0.0);
+}
+
+// DIAMOND
+vec3 fbm(vec2 pos) {
+  float total = 0.0;
+  float gain = 0.65;
+  float frequency = 0.25;
+  float amplitude = gain;
+  float octaves = 6;
+  float lacunarity = 2.0;
+  vec2 derivatives = vec2(0.0);
+  for(float i=0; i<octaves; i++) {
+     vec3 n = sdnoise(pos * frequency)*amplitude;
+    //  vec3 n = snoise(pos * frequency)*amplitude;
+    // //vec3 n = vec3(1, 1, 1);
+    total += n.x;
+    derivatives += n.yz;
+    frequency *= lacunarity;
+    amplitude *= gain;
+  }
+  return vec3(total, derivatives);
+}
+
+//returns the height and the derivatives
+vec3 terrain_shape(in float x, in float z) {
+  // should remain in the [-10,25] range
+  float zz = z - u_frame*0.01;
+  vec3 v = fbm(vec2(x, zz));
+  v-= 2.0;
+  return v;
+}
+
+float height(in float x, in float z) {
+  vec3 v = terrain_shape(x, z);
+  return v.x;
+}
+
+bool march_ray(in vec3 cam_pos, in vec3 cam_dir, out float dist) {
+  float march = 0.5;
+  const float min_m = 0.5;
+  const float max_m = 10.0;
+  for(float t = min_m; t < max_m; t+= march) {
+    vec3 p = cam_pos + cam_dir*t;
+    if(p.y < height(p.x, p.z)) {
+      dist = t - (march * 0.5);
+      return true;
+    }
+    march = 0.1*t;
+  }
+  return false;
+}
+
+vec3 derive_normal(in vec2 p, in float dist) {
+  vec3 v = terrain_shape(p.x, p.y);
+  return normalize(vec3(v.z, 0.004*dist, v.y));
+}
+
+vec3 sky_color(in float x, in float y) {
+  //Sky Color
+  float r = 0.1;
+  float g = 0.2;
+  float b = 0.9;
+  return vec3(r, g, b);
+}
+
+vec3 shading_at(in vec3 intersection, in vec3 normal) {
+  const vec3 light_pos = vec3(0.5, 3.0, -1.5);
+  const vec3 light_color = vec3(1.0, 1.0, 1.0);
+  const float ambient_strength = 0.5;
+  const vec3 ambient = ambient_strength * light_color;
+  vec3 light_dir = normalize(light_pos - intersection);
+  float diff = max(dot(normal, light_dir), 0.0);
+  vec3 diffuse = diff * light_color;
+  return ambient + diffuse;
+}
+
+vec3 terrain_at(in vec3 intersection, in vec3 normal) {
+  //Gray
+  // return vec3(0.1, 0.1, 0.1);
+  if(intersection.y > -1){
+    return vec3(0.9, 0.1, 0.1);
+  } else if(intersection.y > -1.5){
+    return vec3(0.8, 0.6, 0.1);
+  }
+}
+
+vec3 apply_fog(in vec3 color, in float dist, in vec3 cam_dir, in vec3 light_dir) {
+  float falloff = 0.1;
+  float fog_amount = 1.0 - exp(-dist * falloff);
+  float sun_amount = max( dot( cam_dir, light_dir ), 0.0 );
+  vec3  fog_color  = mix( vec3(0.5,0.6,0.7), // bluish
+                           vec3(1.0,0.9,0.7), // yellowish
+                           pow(sun_amount,8.0) );
+  return mix(color, fog_color, fog_amount);
+}
+
+vec3 terrain_color(in vec3 cam_pos, in vec3 cam_dir, in float dist) {
+  vec3 sun_dir = vec3(0.5, -0.5, -0.5);
+  vec3 p = cam_pos + cam_dir * dist; //intersection point
+  vec3 n = derive_normal(p.xy, dist);
+  vec3 s = shading_at(p, n);
+  vec3 m = terrain_at(p, n);
+  return apply_fog(m * s, dist, cam_dir, sun_dir);
+}
+
+void main() {
+  vec2 ndc_coords = gl_FragCoord.xy / u_resolution;
+  float pixelscreenx = 2*ndc_coords.x - 1;
+  float pixelscreeny = 2*ndc_coords.y - 1;
+  float a = radians(100);
+  float x = pixelscreenx*(u_resolution.x/u_resolution.y)*tan(a/2);
+  float y = pixelscreeny*tan(140/2);
+  y-= 0.5;
+  vec3 cam_dir = normalize(vec3(x, y, -1.0));
+  vec3 cam_pos = vec3(0.0, 0.0, 0.0); //units in decameters
+  float dist = 0.0;
+  //Sky shade
+  if(pixelscreeny > 0.4) {
+    frag_color = vec4(sky_color(x, y), 1.0);
+    return;
+  } 
+  if(march_ray(cam_pos, cam_dir, dist)) {
+  frag_color = vec4(terrain_color(cam_pos, cam_dir, dist), 1.0);
+  } else {
+  frag_color = vec4(sky_color(x, y), 1.0);
+  }
 }

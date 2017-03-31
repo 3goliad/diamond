@@ -60,13 +60,14 @@ fn main() {
             .unwrap();
 
     let (res_x, res_y) = display.get_framebuffer_dimensions();
+    println!("{:?}, {:?}", res_x, res_y);
 
     // the main loop
-    start_loop(|| {
-        // building the uniforms
-        let uniforms = uniform! {
-            u_resolution: [res_x, res_y],
-        };
+    let mut running_time = Duration::new(0, 0);
+    let mut frame = 0;
+    'tight: loop {
+        frame += 1;
+        let now = Instant::now();
 
         // drawing a frame
         let mut target = display.draw();
@@ -74,7 +75,11 @@ fn main() {
         target.draw(&vertex_buffer,
                     &index_buffer,
                     &program,
-                    &uniforms,
+                    //Uniforms for inputting data into diamond.frag
+                    &uniform! {
+                        u_resolution: [res_x as f32, res_y as f32],
+                        u_frame: frame as f32,
+                    },
                     &Default::default())
             .unwrap();
         target.finish().unwrap();
@@ -82,43 +87,18 @@ fn main() {
         // polling and handling the events received by the window
         for event in display.poll_events() {
             match event {
-                glutin::Event::Closed => return Action::Stop,
+                glutin::Event::Closed => break 'tight,
                 _ => (),
             }
         }
 
-        Action::Continue
-    });
-}
-
-pub fn start_loop<F>(mut callback: F)
-    where F: FnMut() -> Action
-{
-    let mut accumulator = Duration::new(0, 0);
-    let mut previous_clock = Instant::now();
-
-    loop {
-        match callback() {
-            Action::Stop => break,
-            Action::Continue => (),
-        };
-
-        let now = Instant::now();
-        accumulator += now - previous_clock;
-        previous_clock = now;
-
+        let delta = now.elapsed();
+        println!("{:?}", (frame as f32 / running_time.as_secs() as f32));
+        running_time += delta;
         let fixed_time_stamp = Duration::new(0, 16666667);
-        while accumulator >= fixed_time_stamp {
-            accumulator -= fixed_time_stamp;
-
-            // if you have a game, update the state here
-        }
-
-        thread::sleep(fixed_time_stamp - accumulator);
+        thread::sleep(match fixed_time_stamp.checked_sub(delta) {
+            Some(d) => d,
+            None => fixed_time_stamp,
+        });
     }
-}
-
-pub enum Action {
-    Stop,
-    Continue,
 }
